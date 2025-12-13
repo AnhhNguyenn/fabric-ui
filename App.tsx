@@ -1,0 +1,1 @@
+// This file is deprecated in favor of app/layout.tsx and app/page.tsx (Next.js App Router). You can delete this file.
