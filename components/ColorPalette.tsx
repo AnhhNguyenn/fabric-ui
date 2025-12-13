@@ -1,1 +1,0 @@
-// Moved to components/ColorPalette/ColorPalette.tsx

@@ -1,72 +1,107 @@
-'use client';
-import React, { createContext, useContext, useState } from 'react';
-import { Product } from '@/lib/api';
 
+'use client';
+
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { Product } from '../types';
+
+// Kiểu dữ liệu cho một item trong giỏ hàng
 interface CartItem extends Product {
   quantity: number;
 }
 
+// Kiểu dữ liệu cho Context
 interface CartContextType {
-  cart: CartItem[];
+  cartItems: CartItem[];
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
-  totalItems: number;
-  checkoutZalo: () => void;
+  updateQuantity: (productId: string, quantity: number) => void;
+  clearCart: () => void;
+  getCartTotal: () => number;
+  generateZaloPayLink: () => string;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider = ({ children }: { children: React.ReactNode }) => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+// Hook để sử dụng CartContext
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (context === undefined) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
+};
+
+// Provider
+export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   const addToCart = (product: Product) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item._id === product._id);
-      if (existing) {
-        return prev.map((item) =>
+    setCartItems(prevItems => {
+      const existingItem = prevItems.find(item => item._id === product._id);
+      if (existingItem) {
+        // Nếu sản phẩm đã có, tăng số lượng
+        return prevItems.map(item =>
           item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
         );
+      } else {
+        // Nếu chưa có, thêm vào giỏ với số lượng là 1
+        return [...prevItems, { ...product, quantity: 1 }];
       }
-      return [...prev, { ...product, quantity: 1 }];
     });
   };
 
   const removeFromCart = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item._id !== productId));
+    setCartItems(prevItems => prevItems.filter(item => item._id !== productId));
   };
 
-  const checkoutZalo = () => {
-    if (cart.length === 0) return;
+  const updateQuantity = (productId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(productId);
+    } else {
+      setCartItems(prevItems =>
+        prevItems.map(item =>
+          item._id === productId ? { ...item, quantity } : item
+        )
+      );
+    }
+  };
 
-    let message = "👋 Chào Muse Fabric, mình muốn đặt các mẫu vải này:\n\n";
-    let totalPrice = 0;
+  const clearCart = () => {
+    setCartItems([]);
+  };
 
-    cart.forEach((item, index) => {
-      const lineTotal = item.price * item.quantity;
-      totalPrice += lineTotal;
-      message += `${index + 1}. ${item.name} (${item.category})\n`;
-      message += `   - Số lượng: ${item.quantity}m\n`;
-      message += `   - Đơn giá: ${item.price.toLocaleString('vi-VN')}đ\n\n`;
+  const getCartTotal = () => {
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  };
+
+  // TẠO LINK THANH TOÁN ZALOPAY
+  const generateZaloPayLink = () => {
+    const ZALO_PAY_URL = "https://s.zalopay.vn/v3/order/submit";
+    
+    const orderInfo = cartItems
+      .map(item => `${item.name} (x${item.quantity})`)
+      .join(', ');
+      
+    const params = new URLSearchParams({
+        "zptranstoken": "dummy_token_replace_with_real_one_from_backend", // Sẽ thay thế bằng token từ backend
+        "amount": getCartTotal().toString(),
+        "description": orderInfo,
+        // Các tham số khác có thể cần thiết tùy theo tích hợp ZaloPay
     });
 
-    message += `💰 TỔNG TẠM TÍNH: ${totalPrice.toLocaleString('vi-VN')}đ\n`;
-    message += "Shop tư vấn giúp mình nhé!";
-
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://zalo.me/0877003169?message=${encodedMessage}`, '_blank');
+    return `${ZALO_PAY_URL}?${params.toString()}`;
   };
 
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, totalItems, checkoutZalo }}>
-      {children}
-    </CartContext.Provider>
-  );
-};
+  const value = {
+    cartItems,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getCartTotal,
+    generateZaloPayLink,
+  };
 
-export const useCart = () => {
-  const context = useContext(CartContext);
-  if (!context) throw new Error('useCart must be used within a CartProvider');
-  return context;
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };

@@ -1,1 +1,0 @@
-// This file is deprecated in favor of app/page.tsx (Next.js App Router). You can delete this file.

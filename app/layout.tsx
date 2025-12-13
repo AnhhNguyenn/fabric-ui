@@ -1,49 +1,47 @@
-import React from 'react';
-import { Quicksand } from 'next/font/google';
-import './globals.scss';
-import Navbar from '@/components/Navbar/Navbar';
-import Footer from '@/components/Footer/Footer';
-import { CartProvider } from '@/context/CartContext';
 
-// Tối ưu font chữ Quicksand
-const quicksand = Quicksand({
-  subsets: ['latin', 'vietnamese'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-quicksand',
-  display: 'swap',
-});
+import { getSiteConfig } from '../lib/api';
+import '../app/globals.scss'; // Using SCSS for global styles
 
-export const metadata = {
-  metadataBase: new URL('https://musefabric.vn'), // Thay domain thật của bạn
-  title: {
-    template: '%s | Muse Fabric',
-    default: 'Muse Fabric - Vải Lụa, Umi, Tussi Cao Cấp',
-  },
-  description: 'Chuyên cung cấp vải lụa tơ tằm, Umi, Tussi phong cách Soft Feminine. Mềm mại, thoáng mát, sang trọng.',
-  openGraph: {
-    type: 'website',
-    locale: 'vi_VN',
-    siteName: 'Muse Fabric',
-  },
-  robots: {
-    index: true,
-    follow: true,
-  }
-};
+export async function generateMetadata() {
+  const siteConfig = await getSiteConfig();
+  // This metadata applies to the whole site
+  return {
+    title: { 
+      default: siteConfig.defaultSeo.metaTitle,
+      template: `%s | ${siteConfig.siteName}`,
+    },
+    description: siteConfig.defaultSeo.metaDescription,
+    openGraph: siteConfig.defaultSeo.og,
+    twitter: siteConfig.defaultSeo.twitter,
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const siteConfig = await getSiteConfig();
+
+  // Inline JSON-LD for WebSite Schema
+  const webSiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    'name': siteConfig.siteName,
+    'url': siteConfig.baseUrl,
+    // Potential search action can be added here later
+  };
+
   return (
-    <html lang="vi" className={quicksand.variable}>
+    <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
+        />
+      </head>
       <body>
-        <CartProvider>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
-        </CartProvider>
+        {children}
       </body>
     </html>
   );
