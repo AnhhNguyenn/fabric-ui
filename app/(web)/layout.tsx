@@ -1,22 +1,17 @@
-
-'use client';
-
-import { CartProvider } from '../../context/CartContext';
-import { Navbar } from '../../components/Navbar/Navbar';
-import { Footer } from '../../components/Footer/Footer';
-import '../../app/globals.scss';
+'use client'
+import React from 'react';
+import Navbar from '../../components/Navbar/Navbar'; // Corrected path
+import Footer from '../../components/Footer/Footer'; // Corrected path
+import styles from './layout.module.scss';
 
 export default function WebLayout({ children }: { children: React.ReactNode }) {
   return (
-    <CartProvider>
-      {/* Cấu trúc div này giữ nguyên bố cục flex của bạn */}
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className={styles.webLayout}>
         <Navbar />
-        <main style={{ flex: 1 }}>
-          {children}
+        <main className={styles.mainContent}>
+            {children}
         </main>
         <Footer />
-      </div>
-    </CartProvider>
+    </div>
   );
 }

@@ -1,1 +1,0 @@
-// Moved to components/Hero/Hero.tsx

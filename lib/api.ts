@@ -1,108 +1,115 @@
 
-import { Product, Category } from '../types';
+import { Product, SiteConfig } from '../types';
 
-// Định nghĩa kiểu dữ liệu thô trả về từ API của bạn
-interface ApiProduct {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  imageUrls: string[];
-  category: string; // ID của category
-}
+// ========================================================================
+// MOCK DATA - Dữ liệu giả cho mục đích phát triển giao diện
+// Thay thế phần này bằng kết nối backend thực tế của bạn (ví dụ: Sanity, Strapi, v.v.)
+// ========================================================================
 
-interface ApiCategory {
-  _id: string;
-  name: string;
-  description: string;
-}
+const mockProducts: Product[] = [
+  {
+    _id: '1',
+    name: 'Váy Lụa Hồng Pastel',
+    slug: 'vay-lua-hong-pastel',
+    price: 1250000,
+    description: 'Chiếc váy lụa mềm mại với tông màu hồng pastel ngọt ngào, tôn lên vẻ đẹp dịu dàng và nữ tính. Thiết kế cổ điển, phù hợp cho những buổi dạo phố hoặc tiệc trà chiều.',
+    imageUrls: [
+      '/images/products/dress-pink-1.jpg',
+      '/images/products/dress-pink-2.jpg',
+      '/images/products/dress-pink-3.jpg'
+    ],
+    colors: [
+      { name: 'Hồng Pastel', hex: '#FFD1DC' },
+      { name: 'Trắng Ngà', hex: '#F5F5DC' }
+    ],
+    tags: ['váy', 'lụa', 'hồng', 'pastel']
+  },
+  {
+    _id: '2',
+    name: 'Áo Sơ Mi Lụa Tay Bồng',
+    slug: 'ao-so-mi-lua-tay-bong',
+    price: 890000,
+    description: 'Áo sơ mi lụa cao cấp với thiết kế tay bồng tiểu thư. Chất liệu lụa thoáng mát, mang lại cảm giác thoải mái và sang trọng. Dễ dàng phối với chân váy hoặc quần âu.',
+    imageUrls: [
+      '/images/products/blouse-puff-1.jpg',
+      '/images/products/blouse-puff-2.jpg'
+    ],
+    colors: [
+      { name: 'Tím Lavender', hex: '#E6E6FA' },
+      { name: 'Be Sữa', hex: '#FFF8DC' }
+    ],
+    tags: ['áo', 'sơ mi', 'lụa', 'tím']
+  },
+  {
+    _id: '3',
+    name: 'Chân Váy Xếp Ly Dáng Dài',
+    slug: 'chan-vay-xep-ly-dang-dai',
+    price: 950000,
+    description: 'Chân váy xếp ly dáng dài thướt tha, tạo nên sự uyển chuyển trong mỗi bước đi. Gam màu trung tính dễ phối đồ, là một item không thể thiếu trong tủ đồ của các quý cô thanh lịch.',
+    imageUrls: [
+      '/images/products/skirt-pleated-1.jpg',
+      '/images/products/skirt-pleated-2.jpg'
+    ],
+    colors: [
+      { name: 'Xanh Bạc Hà', hex: '#BDFCC9' },
+      { name: 'Kem', hex: '#FFFDD0' }
+    ],
+    tags: ['chân váy', 'xếp ly', 'dáng dài']
+  },
+  {
+    _id: '4',
+    name: 'Đầm Maxi Hoa Nhí',
+    slug: 'dam-maxi-hoa-nhi',
+    price: 1450000,
+    description: 'Đầm maxi với họa tiết hoa nhí vintage, mang lại vẻ đẹp lãng mạn và bay bổng. Chất vải voan nhẹ, lý tưởng cho những chuyến du lịch hoặc dạo biển.',
+    imageUrls: [
+      '/images/products/dress-maxi-1.jpg',
+      '/images/products/dress-maxi-2.jpg'
+    ],
+    colors: [
+        { name: 'Nền Xanh Hoa Nhí', hex: '#A0E7E5' },
+        { name: 'Nền Trắng Hoa Nhí', hex: '#FFFFFF' }
+    ],
+    tags: ['đầm', 'maxi', 'hoa nhí']
+  }
+];
 
-const API_URL = 'https://api-server-plum.vercel.app';
-const BASE_URL = 'https://your-production-domain.com'; // Sẽ cần thay thế bằng domain thật của bạn
-
-// HÀM MAPPER: Chuyển đổi dữ liệu từ API sang cấu trúc SEO-rich của ứng dụng
-const mapApiProductToAppProduct = (apiProduct: ApiProduct, allCategories: ApiCategory[]): Product => {
-  const category = allCategories.find(c => c._id === apiProduct.category);
-  const slug = apiProduct.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
-
-  return {
-    ...apiProduct,
-    category: { 
-      _id: category?._id || '',
-      name: category?.name || 'Uncategorized'
-    },
-    seo: {
-      metaTitle: `${apiProduct.name} - Mua ngay kẻo lỡ`,
-      metaDescription: apiProduct.description.substring(0, 160),
-      slug: slug,
-      canonicalUrl: `${BASE_URL}/products/${slug}`,
-      og: {
-        title: `${apiProduct.name}`,
-        description: apiProduct.description.substring(0, 160),
-        image: apiProduct.imageUrls[0] || `${BASE_URL}/default-og-image.jpg`,
-        type: 'product',
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title: `${apiProduct.name}`,
-        description: apiProduct.description.substring(0, 160),
-        image: apiProduct.imageUrls[0] || `${BASE_URL}/default-twitter-image.jpg`,
-      },
-      robots: { index: true, follow: true },
-      schema: {
-        type: 'Product',
-        data: {
-          '@context': 'https://schema.org',
-          '@type': 'Product',
-          name: apiProduct.name,
-          description: apiProduct.description,
-          image: apiProduct.imageUrls,
-          sku: apiProduct._id,
-          offers: {
-            '@type': 'Offer',
-            url: `${BASE_URL}/products/${slug}`,
-            priceCurrency: 'VND', 
-            price: apiProduct.price,
-            availability: 'https://schema.org/InStock',
-          },
-        },
-      },
-      breadcrumbs: [
-        { name: 'Trang chủ', slug: '/' },
-        { name: category?.name || 'Products', slug: `/categories/${category?._id}` },
-        { name: apiProduct.name, slug: `/products/${slug}` },
-      ],
-    },
-  };
+const mockSiteConfig: SiteConfig = {
+  title: 'Muse Fabric',
+  description: 'Vẻ đẹp tinh tế từ lụa.',
+  url: 'https://musefabric.com'
 };
 
-// Fetcher Functions
-export async function getCategories(): Promise<ApiCategory[]> {
-  const res = await fetch(`${API_URL}/categories`, { next: { revalidate: 3600 } });
-  if (!res.ok) throw new Error('Failed to fetch categories');
-  return res.json();
+// ========================================================================
+// API FUNCTIONS - Các hàm để lấy dữ liệu
+// ========================================================================
+
+/**
+ * Lấy tất cả sản phẩm (từ dữ liệu giả)
+ */
+export async function getAllProducts(): Promise<Product[]> {
+  console.log("Fetching all mock products...");
+  // Giả lập độ trễ mạng
+  await new Promise(resolve => setTimeout(resolve, 50)); 
+  return mockProducts;
 }
 
-export async function getProducts(): Promise<Product[]> {
-  const [productsRes, categoriesRes] = await Promise.all([
-    fetch(`${API_URL}/products`, { next: { revalidate: 3600 } }),
-    fetch(`${API_URL}/categories`, { next: { revalidate: 3600 } })
-  ]);
-
-  if (!productsRes.ok || !categoriesRes.ok) {
-    throw new Error('Failed to fetch data');
-  }
-
-  const apiProducts: ApiProduct[] = await productsRes.json();
-  const apiCategories: ApiCategory[] = await categoriesRes.json();
-
-  return apiProducts.map(p => mapApiProductToAppProduct(p, apiCategories));
-}
-
+/**
+ * Lấy một sản phẩm theo slug (từ dữ liệu giả)
+ * @param slug - Slug của sản phẩm
+ */
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  // LƯU Ý: API hiện tại không hỗ trợ query bằng slug.
-  // Tạm thời chúng ta sẽ fetch tất cả và tìm sản phẩm, đây là giải pháp không hiệu quả.
-  // Backend nên được nâng cấp để có endpoint: GET /products/slug/:slug
-  const allProducts = await getProducts();
-  return allProducts.find(p => p.seo.slug === slug) || null;
+  console.log(`Fetching mock product with slug: ${slug}...`);
+  await new Promise(resolve => setTimeout(resolve, 50));
+  const product = mockProducts.find(p => p.slug === slug) || null;
+  return product;
+}
+
+/**
+ * Lấy cấu hình trang web (từ dữ liệu giả)
+ */
+export async function getSiteConfig(): Promise<SiteConfig> {
+  console.log("Fetching mock site config...");
+  await new Promise(resolve => setTimeout(resolve, 50));
+  return mockSiteConfig;
 }

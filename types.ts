@@ -1,77 +1,25 @@
 
-// types.ts
-
-// 1. SEO OBJECT THEO CHUẨN MASTER PROMPT
-export interface Seo {
-  metaTitle: string;
-  metaDescription: string;
-  metaKeywords?: string;
-  slug: string;
-  canonicalUrl: string;
-  og?: {
-    title: string;
-    description: string;
-    image: string;
-    type: 'website' | 'article' | 'product';
-  };
-  twitter?: {
-    title: string;
-    description: string;
-    image: string;
-    card: 'summary' | 'summary_large_image';
-  };
-  robots?: {
-    index: boolean;
-    follow: boolean;
-    noimageindex?: boolean;
-    nosnippet?: boolean;
-  };
-  schema?: {
-    type: 'Product' | 'BreadcrumbList' | 'FAQPage' | 'WebSite';
-    data: any; // Dữ liệu JSON-LD cho schema
-  };
-  internalLinks?: {
-    anchor: string;
-    targetSlug: string;
-  }[];
-  faq?: {
-    question: string;
-    answer: string;
-  }[];
-  breadcrumbs?: {
-    name: string;
-    slug: string;
-  }[];
+// Định nghĩa màu sắc của sản phẩm
+export interface ProductColor {
+  name: string;      // Tên màu (ví dụ: "Hồng Pastel")
+  hex: string;       // Mã màu hex (ví dụ: "#FFD1DC")
 }
 
-// 2. ENTITY TYPES MỚI VỚI SEO TÍCH HỢP
+// Định nghĩa cấu trúc cho một sản phẩm
 export interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  imageUrls: string[];
-  category: Pick<Category, '_id' | 'name'>; // Nhúng thông tin category cơ bản
-  seo: Seo;
+  _id: string;                      // ID định danh duy nhất
+  name: string;                     // Tên sản phẩm
+  slug: string;                     // Slug để tạo URL thân thiện
+  price: number;                    // Giá sản phẩm
+  description: string;              // Mô tả chi tiết sản phẩm
+  imageUrls: string[];              // Mảng các đường dẫn ảnh
+  colors: ProductColor[];           // Mảng các lựa chọn màu sắc
+  tags: string[];                   // Mảng các từ khóa hoặc tag
 }
 
-export interface Category {
-  _id: string;
-  name: string;
-  description: string;
-  seo: Seo;
-}
-
-export interface Page {
-  _id: string;
-  title: string;
-  content: string;
-  seo: Seo;
-}
-
-// 3. SITE CONFIGURATION
+// Định nghĩa cấu trúc cho cấu hình trang web (sử dụng cho metadata)
 export interface SiteConfig {
-  siteName: string;
-  baseUrl: string;
-  defaultSeo: Seo;
+    title: string;
+    description: string;
+    url: string;
 }

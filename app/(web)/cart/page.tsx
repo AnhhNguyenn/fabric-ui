@@ -1,70 +1,97 @@
-
 'use client';
 
-import { useCart } from '../../context/CartContext';
-import Image from 'next/image';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useCart } from '../../../context/CartContext';
+import styles from './page.module.scss';
 
 export default function CartPage() {
-  const { cartItems, updateQuantity, removeFromCart, getCartTotal, generateZaloPayLink } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, clearCart, getTotalPrice } = useCart();
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleCheckout = () => {
-    const zaloLink = generateZaloPayLink();
-    // Chuyển hướng người dùng đến link ZaloPay
-    window.location.href = zaloLink;
+  const handlePayment = async () => {
+    setIsProcessing(true);
+    try {
+      const res = await fetch('/api/create-zalo-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+            amount: getTotalPrice(), 
+            orderInfo: `Thanh toan don hang ${Date.now()}` 
+        }),
+      });
+      const data = await res.json();
+      if (data.orderUrl) {
+        // Chuyển hướng người dùng đến ZaloPay
+        window.location.href = data.orderUrl;
+      } else {
+        alert('Không thể tạo đơn hàng ZaloPay. Vui lòng thử lại.');
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error("ZaloPay payment error:", error);
+      alert('Đã xảy ra lỗi. Vui lòng thử lại.');
+      setIsProcessing(false);
+    }
   };
 
   return (
-    <div className="cart-page-container" style={{ padding: '2rem', maxWidth: '960px', margin: '0 auto' }}>
-      <h1>Giỏ hàng của bạn</h1>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Giỏ Hàng Của Bạn</h1>
 
       {cartItems.length === 0 ? (
-        <p>Giỏ hàng của bạn đang trống. <Link href="/" style={{ color: '#3182ce' }}>Tiếp tục mua sắm</Link></p>
+        <div className={styles.emptyCart}>
+          <p>Giỏ hàng của bạn đang trống.</p>
+          <Link href="/" className={styles.continueShoppingLink}>
+            Tiếp tục mua sắm
+          </Link>
+        </div>
       ) : (
-        <>
-          <div className="cart-items-list">
-            {cartItems.map(item => (
-              <div key={item._id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid #e2e8f0', padding: '1rem 0' }}>
-                <Image src={item.imageUrls[0]} alt={item.name} width={80} height={80} style={{ objectFit: 'cover' }} />
-                <div style={{ flex: 1 }}>
-                  <Link href={`/products/${item.seo.slug}`} style={{ fontWeight: 'bold', textDecoration: 'none', color: 'inherit' }}>
-                    {item.name}
-                  </Link>
-                  <p>{item.price.toLocaleString('vi-VN')}₫</p>
+        <div>
+          <div>
+            {cartItems.map((item) => (
+              <div key={item.id} className={styles.cartItem}>
+                <div className={styles.itemImage}>
+                  <Image src={item.imageUrl} alt={item.name} fill sizes="100px" />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input 
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => updateQuantity(item._id, parseInt(e.target.value))}
-                    style={{ width: '60px', textAlign: 'center', padding: '0.5rem' }}
-                  />
-                  <button onClick={() => removeFromCart(item._id)} style={{ color: '#e53e3e', background: 'none', border: 'none', cursor: 'pointer' }}>Xóa</button>
+                
+                <div className={styles.itemInfo}>
+                  <p className={styles.itemName}>{item.name}</p>
+                  <p className={styles.itemColor}>{item.color?.name || ''}</p>
+                  <p className={styles.itemPrice}>{item.price.toLocaleString('vi-VN')}₫</p>
+                </div>
+
+                <div className={styles.itemActions}>
+                  <div className={styles.quantityControl}>
+                      <label htmlFor={`quantity-${item.id}`} className="sr-only">Số lượng</label>
+                      <input
+                          id={`quantity-${item.id}`}
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                      />
+                  </div>
+                  <button onClick={() => removeFromCart(item.id)} className={styles.removeButton}>
+                    Xóa
+                  </button>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="cart-summary" style={{ marginTop: '2rem', textAlign: 'right' }}>
-            <h2>Tổng cộng: {getCartTotal().toLocaleString('vi-VN')}₫</h2>
-            <button 
-              onClick={handleCheckout}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#2f855a', // Green-600
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                marginTop: '1rem'
-              }}
-            >
-              Thanh toán qua ZaloPay
+          <div className={styles.summary}>
+            <div className={styles.total}>
+              Tổng cộng: <span>{getTotalPrice().toLocaleString('vi-VN')}₫</span>
+            </div>
+            <button onClick={handlePayment} className={styles.checkoutButton} disabled={isProcessing}>
+              {isProcessing ? 'Đang xử lý...' : 'Thanh toán qua ZaloPay'}
             </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

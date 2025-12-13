@@ -1,86 +1,137 @@
+'use client';
 
-import { getProductBySlug, getProducts } from '../../../lib/api';
-import { notFound } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { ProductGrid } from '../../../components/ProductGrid/ProductGrid';
-import { AddToCartButton } from '../../../components/AddToCartButton/AddToCartButton'; // Component này sẽ được tạo sau
+import { notFound } from 'next/navigation';
+import { getProductBySlug } from '../../../../lib/api';
+import { Product } from '../../../../types';
+import { useCart } from '../../../../context/CartContext';
+import styles from './page.module.scss';
 
-// Generate Metadata: Tạo các thẻ meta SEO động
-export async function generateMetadata({ params }: { params: { slug: string } }) {
-  const product = await getProductBySlug(params.slug);
-  if (!product) return { title: 'Sản phẩm không tồn tại' };
+interface PageProps {
+  params: { slug: string };
+}
 
-  const { seo } = product;
-  return {
-    title: seo.metaTitle,
-    description: seo.metaDescription,
-    alternates: { canonical: seo.canonicalUrl },
-    openGraph: seo.og,
-    twitter: seo.twitter,
+export default function ProductPage({ params }: PageProps) {
+  const { slug } = params;
+  const { addToCart } = useCart();
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(0); 
+  const [selectedColorHex, setSelectedColorHex] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [justAdded, setJustAdded] = useState(false);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const fetchedProduct = await getProductBySlug(slug);
+        if (fetchedProduct) {
+          setProduct(fetchedProduct);
+          if (fetchedProduct.colors.length > 0) {
+            setSelectedColorHex(fetchedProduct.colors[0].hex);
+          }
+        } else {
+          notFound();
+        }
+      } catch (error) {
+        console.error("Failed to fetch product:", error);
+        notFound();
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [slug]);
+
+  const handleAddToCart = () => {
+    if (product) {
+        const selectedColor = product.colors.find(c => c.hex === selectedColorHex);
+        addToCart(product, quantity, selectedColor);
+        setJustAdded(true);
+        setTimeout(() => {
+            setJustAdded(false);
+        }, 2000); // Hide message after 2 seconds
+    }
   };
-}
 
-// Generate Static Paths: Tạo sẵn các trang tĩnh khi build
-export async function generateStaticParams() {
-  const products = await getProducts();
-  return products.map(product => ({ slug: product.seo.slug }));
-}
-
-// Trang chi tiết sản phẩm
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await getProductBySlug(params.slug);
-
-  // Lấy một vài sản phẩm khác để làm "related products"
-  const allProducts = await getProducts();
-  const relatedProducts = allProducts.filter(p => p._id !== product?._id).slice(0, 4);
-
-  if (!product) {
-    notFound();
+  if (loading) {
+    return <div className={styles.container}><p>Đang tải sản phẩm...</p></div>;
   }
 
-  const { name, description, price, imageUrls, seo } = product;
-
-  // Tạo Breadcrumb Schema từ dữ liệu SEO
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: seo.breadcrumbs?.map((crumb, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: crumb.name,
-      item: `${BASE_URL}${crumb.slug}`,
-    })),
-  };
+  if (!product) {
+    return notFound();
+  }
 
   return (
-    <div className="product-page-container" style={{ padding: '2rem' }}>
-      {/* Nhúng JSON-LD Schemas */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(seo.schema?.data) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-
-      <div className="product-main-content" style={{ display: 'flex', gap: '2rem', marginBottom: '2rem' }}>
-        <div className="product-image-gallery">
-          {/* Sử dụng Next/Image để tối ưu ảnh */}
-          <Image src={imageUrls[0]} alt={name} width={500} height={500} style={{ objectFit: 'cover' }} />
+    <div className={styles.container}>
+      <div className={styles.grid}>
+        {/* Image Gallery */}
+        <div className={styles.imageGallery}>
+            <div className={styles.mainImage}>
+                <Image 
+                    src={product.imageUrls[selectedImage]}
+                    alt={product.name}
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                />
+            </div>
+            <div className={styles.thumbnailList}>
+                {product.imageUrls.map((url, index) => (
+                    <div 
+                        key={index} 
+                        className={`${styles.thumbnail} ${index === selectedImage ? styles.active : ''}`}
+                        onClick={() => setSelectedImage(index)}
+                    >
+                        <Image src={url} alt={`Thumbnail ${index + 1}`} fill sizes="10vw"/>
+                    </div>
+                ))}
+            </div>
         </div>
-        <div className="product-details" style={{ flex: 1 }}>
-          <h1>{name}</h1>
-          <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#e53e3e' }}>
-            {price.toLocaleString('vi-VN')}₫
-          </p>
-          <p style={{ marginTop: '1rem' }}>{description}</p>
+
+        {/* Product Details */}
+        <div className={styles.details}>
+          <h1 className={styles.name}>{product.name}</h1>
+          <p className={styles.price}>{product.price.toLocaleString('vi-VN')}₫</p>
+          <div className={styles.description} dangerouslySetInnerHTML={{ __html: product.description.replace(/\n/g, '<br />') }} />
           
-          {/* Component nút thêm vào giỏ hàng */}
-          <AddToCartButton product={product} />
-        </div>
-      </div>
+          {/* Color Selector */}
+          <div className={styles.colorSelector}>
+              <label className={styles.label}>Màu sắc: {product.colors.find(c => c.hex === selectedColorHex)?.name}</label>
+              <div className={styles.colorOptions}>
+                  {product.colors.map(color => (
+                      <div 
+                          key={color.hex}
+                          className={`${styles.colorSwatch} ${selectedColorHex === color.hex ? styles.selected : ''}`}
+                          style={{ backgroundColor: color.hex }}
+                          onClick={() => setSelectedColorHex(color.hex)}
+                          title={color.name}
+                      />
+                  ))}
+              </div>
+          </div>
 
-      <div className="related-products">
-        <h2>Sản phẩm liên quan</h2>
-        <ProductGrid products={relatedProducts} />
+          {/* Quantity & Add to Cart */}
+          <div className={styles.quantitySelector}>
+              <label htmlFor="quantity" className={styles.label}>Số lượng</label>
+              <input 
+                  id="quantity"
+                  type="number" 
+                  min="1" 
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+              />
+          </div>
+
+          <button onClick={handleAddToCart} className={styles.addToCartButton} disabled={justAdded}>
+              {justAdded ? 'Đã thêm!' : 'Thêm vào giỏ'}
+          </button>
+          {justAdded && <p className={styles.addedMessage}>Sản phẩm đã được thêm vào giỏ hàng!</p>}
+        </div>
       </div>
     </div>
   );
 }
-
-const BASE_URL = 'https://your-production-domain.com'; // Nhớ thay thế domain thật

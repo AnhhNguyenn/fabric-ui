@@ -1,0 +1,19 @@
+/* app/(web)/layout.module.scss */
+@import '../../styles/variables';
+
+.mainContainer {
+    background-color: $bg-lavender-blush; // Nền chính
+    color: $text-deep-rose; // Màu chữ chính
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.content {
+    flex-grow: 1;
+    padding: 2rem 1rem; // Thêm padding cho nội dung
+
+    @media (min-width: $breakpoint-md) {
+        padding: 2rem;
+    }
+}

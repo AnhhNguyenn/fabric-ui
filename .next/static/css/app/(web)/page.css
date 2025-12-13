@@ -1,0 +1,95 @@
+/*!******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[13].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[13].oneOf[9].use[5]!./components/ProductCard/ProductCard.module.scss ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/* components/ProductCard/ProductCard.module.scss */
+/* styles/_variables.scss */
+/* 1. Theme Colors */
+/* 2. Text & Accents */
+/* 3. Detailed Palette (for color swatches) */
+/* Breakpoints for responsive design */
+.ProductCard_card__JhHwp {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.ProductCard_card__JhHwp:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(136, 19, 55, 0.1);
+}
+
+.ProductCard_imageContainer___15Td {
+  position: relative;
+  width: 100%;
+  padding-top: 125%;
+  overflow: hidden;
+}
+.ProductCard_imageContainer___15Td img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.ProductCard_imageContainer___15Td:hover img {
+  transform: scale(1.05);
+}
+
+.ProductCard_info__tfjSD {
+  padding: 1rem;
+}
+
+.ProductCard_name__LLWJY {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ProductCard_price__V36ae {
+  font-size: 1rem;
+  color: #881337;
+  font-weight: 500;
+}
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[9].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[9].use[3]!./node_modules/next/dist/build/webpack/loaders/resolve-url-loader/index.js??ruleSet[1].rules[13].oneOf[9].use[4]!./node_modules/next/dist/compiled/sass-loader/cjs.js??ruleSet[1].rules[13].oneOf[9].use[5]!./app/(web)/page.module.scss ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/* app/(web)/page.module.scss */
+/* styles/_variables.scss */
+/* 1. Theme Colors */
+/* 2. Text & Accents */
+/* 3. Detailed Palette (for color swatches) */
+/* Breakpoints for responsive design */
+.page_hero__O8Tsf {
+  text-align: center;
+  padding: 3rem 1rem;
+  background-color: #ffe4e6;
+  border-radius: 12px;
+  margin-bottom: 3rem;
+}
+.page_hero__O8Tsf .page_title__YMwJ0 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #881337;
+  margin-bottom: 0.5rem;
+}
+.page_hero__O8Tsf .page_subtitle__pllzW {
+  font-size: 1.1rem;
+  color: #881337;
+  opacity: 0.8;
+}
+
+.page_grid___8761 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-gap: 2rem;
+  gap: 2rem;
+}

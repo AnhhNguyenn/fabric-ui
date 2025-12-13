@@ -1,47 +1,45 @@
 
-import { getSiteConfig } from '../lib/api';
-import '../app/globals.scss'; // Using SCSS for global styles
+import { CartProvider } from '../context/CartContext';
+import '../app/globals.scss';
 
-export async function generateMetadata() {
-  const siteConfig = await getSiteConfig();
-  // This metadata applies to the whole site
-  return {
-    title: { 
-      default: siteConfig.defaultSeo.metaTitle,
-      template: `%s | ${siteConfig.siteName}`,
-    },
-    description: siteConfig.defaultSeo.metaDescription,
-    openGraph: siteConfig.defaultSeo.og,
-    twitter: siteConfig.defaultSeo.twitter,
-  };
-}
+// Static Metadata
+export const metadata = {
+  title: {
+    default: 'Muse Fabric - Vẻ Đẹp Tinh Tế',
+    template: '%s | Muse Fabric',
+  },
+  description: 'Khám phá bộ sưu tập thời trang nữ tính và thanh lịch của chúng tôi, lấy cảm hứng từ sự mềm mại và sang trọng.',
+  keywords: ['thời trang nữ', 'lụa', 'nữ tính', 'thanh lịch', 'soft feminine'],
+};
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const siteConfig = await getSiteConfig();
+export default function RootLayout({ children }: { children: React.ReactNode }) {
 
   // Inline JSON-LD for WebSite Schema
   const webSiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    'name': siteConfig.siteName,
-    'url': siteConfig.baseUrl,
-    // Potential search action can be added here later
+    name: metadata.title.default,
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+    description: metadata.description,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
   };
 
   return (
-    <html lang="en">
-      <head>
+    <html lang="vi">
+       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
         />
       </head>
       <body>
-        {children}
+        <CartProvider>
+            {children}
+        </CartProvider>
       </body>
     </html>
   );
