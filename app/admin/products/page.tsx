@@ -1,321 +1,130 @@
-// app/admin/products/create/page.tsx
+// app/admin/products/page.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import { productApi } from '../../../src/utils/api';
-import { Category } from '../../../../src/types';
-import { Save, Image, Tag, Loader2, Info, List, DollarSign, Search, Zap, Share2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Product, Category } from '../../../src/types';
+import Link from 'next/link';
+import { Plus, Trash2, Edit, Loader2, DollarSign } from 'lucide-react'; 
 
-// Hàm hỗ trợ tạo slug
-const createSlug = (name: string) => {
-    if (!name) return '';
-    return name.toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/đ/g, 'd').replace(/Đ/g, 'D')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-');
-};
+export default function ProductManagementPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export default function CreateProductPage() {
-    const router = useRouter();
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [categoryLoading, setCategoryLoading] = useState(true);
-    const [loading, setLoading] = useState(false);
-    const [fileList, setFileList] = useState<FileList | null>(null);
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const data = await productApi.getAll();
+      setProducts(data);
+    } catch (err) {
+      setError("Không thể tải sản phẩm. Đã xảy ra lỗi API.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // Form data
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [price, setPrice] = useState<number | ''>('');
-    const [categoryId, setCategoryId] = useState('');
-    const [tag, setTag] = useState('');
-    
-    // SEO fields (MetaTitle/Description)
-    const [metaTitle, setMetaTitle] = useState('');
-    const [metaDescription, setMetaDescription] = useState('');
-    
-    // OPEN GRAPH fields (BẮT BUỘC)
-    const [ogTitle, setOgTitle] = useState('');
-    const [ogDescription, setOgDescription] = useState('');
-    const [ogImage, setOgImage] = useState('');
-    
-    const [formError, setFormError] = useState<string | null>(null);
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
-    // Logic kiểm tra form (CHỈ DÙNG ĐỂ HIỂN THỊ CẢNH BÁO, KHÔNG DÙNG ĐỂ DISABLED NÚT)
-    const isFormValid = () => {
-        return (
-            name && 
-            price !== '' && 
-            categoryId && 
-            fileList && fileList.length > 0 && 
-            metaTitle && 
-            metaDescription && 
-            ogTitle && 
-            ogDescription && 
-            ogImage
-        );
-    };
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm "${name}"? Thao tác này không thể hoàn tác.`)) {
+      try {
+        await productApi.delete(id);
+        fetchProducts(); 
+        alert(`Đã xóa sản phẩm "${name}" thành công.`);
+      } catch (err) {
+        alert("Xóa sản phẩm thất bại. Vui lòng kiểm tra lại quyền hạn hoặc kết nối API.");
+      }
+    }
+  };
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const data = await categoryApi.getAll();
-                setCategories(data);
-                if (data.length > 0) {
-                    setCategoryId(data[0]._id);
-                }
-            } catch (err) {
-                console.error("Lỗi tải danh mục:", err);
-            } finally {
-                setCategoryLoading(false);
-            }
-        };
-        fetchCategories();
-    }, []);
+  if (loading) return (
+      <div className="flex items-center justify-center p-20 text-lg text-gray-600">
+          <Loader2 className="w-6 h-6 animate-spin mr-2" /> Đang tải dữ liệu...
+      </div>
+  );
+  if (error) return <p className="text-red-500 text-lg p-4 bg-red-50 border border-red-200 rounded-xl">Lỗi: {error}</p>;
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            setFileList(e.target.files);
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setFormError(null);
-        
-        // --- CHỈ KIỂM TRA VALIDATION Ở ĐÂY, KHÔNG ĐỂ NÚT BỊ DISABLED BẰNG JS ---
-        if (!isFormValid()) {
-            setFormError('CẢNH BÁO: Vui lòng điền đầy đủ tất cả các trường BẮT BUỘC (có dấu *) và chọn ít nhất 1 ảnh.');
-            // Vẫn tiếp tục chạy để Server API kiểm tra lỗi chi tiết
-        }
-
-        setLoading(true);
-
-        const formData = new FormData();
-        const productSlug = createSlug(name);
-        const productCanonicalUrl = `/products/${productSlug}`;
-
-        // Thông tin cơ bản
-        formData.append('name', name);
-        formData.append('description', description);
-        formData.append('price', price.toString());
-        formData.append('category', categoryId);
-        formData.append('tag', tag);
-
-        // --- Dữ liệu SEO BẮT BUỘC ---
-        formData.append('seo[metaTitle]', metaTitle);
-        formData.append('seo[metaDescription]', metaDescription);
-        formData.append('seo[slug]', productSlug); // Tự động tạo
-        formData.append('seo[canonicalUrl]', productCanonicalUrl); // Tự động tạo
-        formData.append('seo[keywords]', ''); 
-
-        // --- Dữ liệu Open Graph BẮT BUỘC ---
-        formData.append('seo[openGraph][title]', ogTitle);
-        formData.append('seo[openGraph][description]', ogDescription);
-        formData.append('seo[openGraph][image]', ogImage); 
-        
-        // Files
-        if (fileList) {
-             for (let i = 0; i < fileList.length; i++) {
-                formData.append('files', fileList[i]);
-            }
-        }
-       
-
-        try {
-            await productApi.create(formData);
-            alert('Tạo sản phẩm thành công!');
-            router.push('/admin/products');
-        } catch (error) {
-            console.error("Lỗi tạo sản phẩm:", error);
-            setFormError('Tạo sản phẩm thất bại. Vui lòng kiểm tra console hoặc API.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="space-y-8">
-            <h1 className="text-3xl font-bold text-gray-800 font-serif">Tạo Sản phẩm mới</h1>
+  return (
+    <div className="space-y-8">
+        <div className="flex justify-between items-center flex-wrap gap-4"> 
+            <h1 className="text-3xl font-bold text-gray-800 font-serif">Quản lý Sản phẩm ({products.length})</h1>
             
-            {formError && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl flex items-center">
-                    <Info className="w-5 h-5 mr-3 flex-shrink-0" />
-                    <span>{formError}</span>
-                </div>
-            )}
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-                
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    
-                    {/* THÔNG TIN CƠ BẢN (Col 1 & 2) */}
-                    <div className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-lg border border-gray-100 space-y-6">
-                        <h2 className="text-2xl font-bold text-rose-500 border-b pb-3 font-serif flex items-center gap-2">
-                             <Zap className="w-5 h-5"/> Dữ liệu Bán hàng
-                        </h2>
-                        
-                        {/* Name & Description */}
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">Tên Sản phẩm <span className="text-red-500">*</span></label>
-                            <input 
-                                type="text" 
-                                placeholder="VD: Lụa Tơ Tằm cao cấp màu Hồng Phấn"
-                                required
-                                value={name} onChange={(e) => setName(e.target.value)}
-                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition"
-                            />
-                        </div>
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
-                            <textarea 
-                                placeholder="VD: Dòng lụa thượng hạng, 100% tơ tằm tự nhiên, mềm mịn, thoáng khí..."
-                                rows={4}
-                                value={description} onChange={(e) => setDescription(e.target.value)}
-                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition"
-                            />
-                        </div>
-
-                        {/* Price, Category, Tag */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="relative">
-                                <DollarSign className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                                <input 
-                                    type="number" 
-                                    placeholder="VD: 450000 (đơn vị/mét) *"
-                                    required min="1000"
-                                    value={price} onChange={(e) => setPrice(Number(e.target.value))}
-                                    className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition"
-                                />
-                            </div>
-                            <div className="relative">
-                                <List className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                                <select 
-                                    required
-                                    value={categoryId} onChange={(e) => setCategoryId(e.target.value)}
-                                    className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition disabled:bg-gray-100 appearance-none"
-                                    disabled={categoryLoading || categories.length === 0}
-                                >
-                                    {categoryLoading && <option>Đang tải danh mục...</option>}
-                                    {categories.length === 0 && !categoryLoading && <option value="">Vui lòng tạo danh mục trước</option>}
-                                    {categories.map(cat => (
-                                        <option key={cat._id} value={cat._id}>{cat.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="relative">
-                                <Tag className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                                <input 
-                                    type="text" 
-                                    placeholder="VD: Best Seller"
-                                    value={tag} onChange={(e) => setTag(e.target.value)}
-                                    className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition"
-                                />
-                            </div>
-                        </div>
-
-                        {/* HÌNH ẢNH */}
-                        <h2 className="text-2xl font-bold text-rose-500 border-b pb-3 pt-4 font-serif flex items-center gap-2">
-                             <Image className="w-5 h-5"/> Hình ảnh <span className="text-red-500 text-base">*</span>
-                        </h2>
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">Upload ảnh (Tối đa 5 ảnh)</label>
-                            <div className="flex items-center space-x-4">
-                                <Image className="w-6 h-6 text-gray-400" />
-                                <input 
-                                    type="file" multiple required
-                                    onChange={handleFileChange}
-                                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 cursor-pointer"
-                                />
-                            </div>
-                            <p className="text-xs text-gray-500 ml-10">{fileList ? `${fileList.length} files đã chọn.` : 'Chọn 1 hoặc nhiều ảnh.'}</p>
-                        </div>
-                    </div>
-
-                    {/* SEO & Open Graph (Col 3) */}
-                    <div className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg border border-gray-100 space-y-6 self-start">
-                        <h2 className="text-xl font-bold text-rose-500 border-b pb-3 font-serif flex items-center gap-2">
-                            <Search className="w-5 h-5"/> Tối ưu SEO (Google) <span className="text-red-500 text-base">*</span>
-                        </h2>
-                        
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">Meta Title</label>
-                            <input 
-                                type="text" 
-                                placeholder="VD: Lụa Tơ Tằm Hồng Phấn | Muse Fabric"
-                                required
-                                value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)}
-                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition"
-                            />
-                        </div>
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">Meta Description</label>
-                            <textarea 
-                                placeholder="VD: Mua lụa tơ tằm nguyên chất, satin, umi tại Muse Fabric với giá tốt nhất."
-                                required
-                                rows={3}
-                                value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)}
-                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition"
-                            />
-                        </div>
-
-                        {/* OPEN GRAPH SECTION */}
-                        <h3 className="text-xl font-bold text-rose-500 border-b pb-3 pt-4 font-serif flex items-center gap-2">
-                            <Share2 className="w-5 h-5"/> Open Graph (Social) <span className="text-red-500 text-base">*</span>
-                        </h3>
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">OG Title</label>
-                            <input 
-                                type="text" 
-                                placeholder="Tiêu đề khi chia sẻ (BẮT BUỘC)" 
-                                required
-                                value={ogTitle}
-                                onChange={(e) => setOgTitle(e.target.value)}
-                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition"
-                            />
-                        </div>
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">OG Description</label>
-                            <textarea 
-                                placeholder="Mô tả khi chia sẻ (BẮT BUỘC)" 
-                                required
-                                value={ogDescription}
-                                onChange={(e) => setOgDescription(e.target.value)}
-                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition"
-                                rows={2}
-                            />
-                        </div>
-                        <div className="space-y-4">
-                            <label className="block text-sm font-medium text-gray-700">OG Image URL</label>
-                            <input 
-                                type="url" 
-                                placeholder="Link ảnh cho Social (VD: https://imgur.com/...)" 
-                                required
-                                value={ogImage}
-                                onChange={(e) => setOgImage(e.target.value)}
-                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* SAVE BUTTON - FIX BỎ ĐIỀU KIỆN isFormValid để Server tự check */}
-                <div className="pt-6 border-t border-gray-200">
-                    <button
-                        type="submit"
-                        // FIX: Chỉ kiểm tra trạng thái loading (Đã xóa isFormValid)
-                        disabled={loading} 
-                        className={`w-full text-white px-6 py-3.5 rounded-xl flex items-center justify-center transition shadow-lg shadow-rose-300/50 font-extrabold uppercase text-lg ${
-                            loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-rose-600 hover:bg-rose-700'
-                        }`}
-                    >
-                        {loading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
-                        {loading ? 'Đang tạo...' : 'LƯU SẢN PHẨM'}
-                    </button>
-                </div>
-            </form>
+            {/* NÚT TẠO MỚI SẢN PHẨM (NÚT BẠN CẦN) */}
+            <Link href="/admin/products/create" className="bg-rose-500 text-white px-4 py-2.5 rounded-xl flex items-center hover:bg-rose-600 transition shadow-md shadow-rose-300/50 font-semibold uppercase text-sm">
+                <Plus className="w-5 h-5 mr-2" /> Tạo mới sản phẩm
+            </Link>
         </div>
-    );
+
+        {/* BẢNG SẢN PHẨM (RESPONSIVE) */}
+        <div className="bg-white p-4 md:p-6 rounded-2xl shadow-lg border border-gray-100 overflow-x-auto">
+            <div className="min-w-[700px]"> 
+                {products.length === 0 ? (
+                    <p className="text-gray-500 italic p-4 text-center">Chưa có sản phẩm nào được tạo.</p>
+                ) : (
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-rose-50/50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-rose-800 uppercase tracking-wider rounded-tl-xl">Ảnh</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-rose-800 uppercase tracking-wider">Tên Sản phẩm</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-rose-800 uppercase tracking-wider">Danh mục</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-rose-800 uppercase tracking-wider">Giá/m</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-rose-800 uppercase tracking-wider rounded-tr-xl">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-100">
+                            {products.map((product) => {
+                                const categoryName = typeof product.category === 'object' 
+                                    ? (product.category as Category).name 
+                                    : product.category;
+                                return (
+                                    <tr key={product._id} className="hover:bg-rose-50/50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <img 
+                                                src={product.imageUrls[0] || 'https://via.placeholder.com/50x50?text=No+Img'} 
+                                                alt={product.name} 
+                                                className="h-12 w-12 object-cover rounded-lg shadow-sm" 
+                                            />
+                                        </td>
+                                        <td className="px-6 py-4 font-medium text-gray-900 truncate max-w-xs">{product.name}</td>
+                                        <td className="px-6 py-4">
+                                            <span className="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-100 rounded-full">
+                                                {categoryName}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 flex items-center gap-1">
+                                            <DollarSign className="w-4 h-4 text-green-600" />
+                                            <span className="font-bold text-sm text-green-700">
+                                                {product.price.toLocaleString('vi-VN')} đ
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-sm font-medium space-x-2 whitespace-nowrap">
+                                            {/* NÚT CHỈNH SỬA */}
+                                            <Link 
+                                                href={`/admin/products/${product._id}`} 
+                                                className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50 transition"
+                                                title="Chỉnh sửa"
+                                            >
+                                                <Edit className="w-5 h-5" />
+                                            </Link>
+                                            {/* NÚT XÓA */}
+                                            <button 
+                                                onClick={() => handleDelete(product._id, product.name)}
+                                                className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-50 transition"
+                                                title="Xóa"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                )}
+            </div>
+        </div>
+    </div>
+  );
 }
