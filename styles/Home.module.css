@@ -1,0 +1,28 @@
+
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  background-color: #fff;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #eaeaea;
+  text-align: center;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  padding: 2rem;
+}
+
+.productSection {
+  flex: 3;
+  margin-right: 2rem;
+}
+
+.cartSection {
+  flex: 1;
+}

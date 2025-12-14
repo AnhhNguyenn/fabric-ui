@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Scrollbar Customization --- */
+.scrollbar-hide::-webkit-scrollbar { 
+    display: none; 
+}
+.scrollbar-hide { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+}
+
+/* --- Grain Texture --- */
+.bg-grain {
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80"><g fill="%239C92AC" fill-opacity="0.08"><circle cx="40" cy="40" r="5"/><path d="M10 10l5 5-5 5-5-5 5-5zM20 20l5 5-5 5-5-5 5-5zM30 30l5 5-5 5-5-5 5-5zM40 40l5 5-5 5-5-5 5-5zM50 50l5 5-5 5-5-5 5-5zM60 60l5 5-5 5-5-5 5-5zM70 70l5 5-5 5-5-5 5-5z"/></g></svg>');
+}
+
+
+/* --- KEYFRAME ANIMATIONS --- */
+
+@layer utilities {
+    @keyframes blob {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0px, 0px) scale(1); }
+    }
+
+    @keyframes float {
+	    0% { transform: translatey(0px); }
+	    50% { transform: translatey(-15px); }
+	    100% { transform: translatey(0px); }
+    }
+
+    @keyframes spin-slow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .animate-blob {
+        animation: blob 7s infinite;
+    }
+    .animate-float {
+        animation: float 4s ease-in-out infinite;
+    }
+    .animate-spin-slow {
+        animation: spin-slow 12s linear infinite;
+    }
+    .animate-fade-up {
+        animation: fade-up 1s ease-out forwards;
+        opacity: 0;
+    }
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
+    }
+
+    .animation-delay-2000 { animation-delay: 2s; }
+    .animation-delay-4000 { animation-delay: 4s; }
+
+    /* --- CUBIC BEZIER for Transitions --- */
+    .cubic-bezier\(0\.2\,0\.8\,0\.2\,1\) {
+        transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+}
