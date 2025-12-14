@@ -40,3 +40,14 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.next/app-build-manifest.json
+.next/build-manifest.json
+.next/trace
+.next/cache/webpack/client-development/0.pack.gz
+.next/cache/webpack/client-development/index.pack.gz
+.next/server/app-paths-manifest.json
+.next/server/middleware-build-manifest.js
+.next/server/pages-manifest.json
+.next/server/server-reference-manifest.js
+.next/server/server-reference-manifest.json
+.next/static/development/_buildManifest.js

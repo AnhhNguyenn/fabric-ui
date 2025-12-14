@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Search, Menu, X, Trash2, MessageCircle, Minus, Plus, ShoppingCart, ArrowRight } from 'lucide-react';
-import { PRODUCTS } from '../constants';
+// Đã loại bỏ import { PRODUCTS } từ '../constants'
+import { ShoppingBag, Search, Menu, X, MessageCircle, Minus, Plus, ShoppingCart, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
@@ -10,10 +10,16 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Use Global Cart State
-  const { items, isOpen: isCartOpen, openCart, closeCart, removeItem, updateQuantity, total } = useCart();
-
-  // Zalo Info
-  const ZALO_PHONE = "0877003169"; 
+  const { 
+    items, 
+    isOpen: isCartOpen, 
+    openCart, 
+    closeCart, 
+    removeItem, 
+    updateQuantity, 
+    total, 
+    checkoutZalo 
+  } = useCart();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -25,25 +31,14 @@ const Navbar = () => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+      setIsMobileMenuOpen(false); // Đóng menu sau khi scroll
     }
   };
 
   const handleZaloCheckout = () => {
-    if (items.length === 0) return;
-    
-    let message = "Chào Muse, mình muốn đặt hàng:\n";
-    items.forEach(item => {
-      message += `- ${item.product.name} (${item.quantity}m)\n`;
-    });
-    message += `Tổng tiền: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total)}.`;
-    message += "\nTư vấn giúp mình nhé!";
-    
-    const zaloUrl = `https://zalo.me/${ZALO_PHONE}?text=${encodeURIComponent(message)}`;
-    window.open(zaloUrl, '_blank');
+    checkoutZalo(); 
+    closeCart(); // Đóng giỏ hàng sau khi chuyển sang Zalo
   };
-
-  // Helper to parse price for individual item display
-  const parsePrice = (priceStr: string) => parseInt(priceStr.replace(/\./g, '').replace(/[^\d]/g, ''), 10);
 
   return (
     <>
@@ -121,15 +116,15 @@ const Navbar = () => {
           </div>
           <div className="flex-1 flex flex-col p-8 gap-6 overflow-y-auto">
              <div className="space-y-6">
-                 <button onClick={() => { scrollToSection('products'); setIsMobileMenuOpen(false); }} className="w-full text-left flex items-center justify-between group">
+                 <button onClick={() => scrollToSection('products')} className="w-full text-left flex items-center justify-between group">
                     <span className="text-3xl font-serif text-charcoal group-hover:text-deep-rose transition-colors">Sản phẩm</span>
                     <ArrowRight size={20} className="text-rose-300 group-hover:text-deep-rose -translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
                  </button>
-                 <button onClick={() => { scrollToSection('features'); setIsMobileMenuOpen(false); }} className="w-full text-left flex items-center justify-between group">
+                 <button onClick={() => scrollToSection('features')} className="w-full text-left flex items-center justify-between group">
                     <span className="text-3xl font-serif text-charcoal group-hover:text-deep-rose transition-colors">Tính năng</span>
                      <ArrowRight size={20} className="text-rose-300 group-hover:text-deep-rose -translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
                  </button>
-                 <button onClick={() => { scrollToSection('palette'); setIsMobileMenuOpen(false); }} className="w-full text-left flex items-center justify-between group">
+                 <button onClick={() => scrollToSection('palette')} className="w-full text-left flex items-center justify-between group">
                     <span className="text-3xl font-serif text-charcoal group-hover:text-deep-rose transition-colors">Bảng màu</span>
                      <ArrowRight size={20} className="text-rose-300 group-hover:text-deep-rose -translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
                  </button>
@@ -206,9 +201,9 @@ const Navbar = () => {
               </div>
             ) : (
               items.map((item) => (
-                <div key={item.product.id} className="flex gap-4 p-3 rounded-3xl hover:bg-lavender-blush/30 transition-colors group">
+                <div key={item.product._id} className="flex gap-4 p-3 rounded-3xl hover:bg-lavender-blush/30 transition-colors group"> 
                     <div className="w-24 aspect-[3/4] overflow-hidden rounded-2xl shadow-sm shrink-0 relative bg-gray-100">
-                      <img src={item.product.image} alt="" className="w-full h-full object-cover" />
+                      <img src={item.product.imageUrls?.[0] || 'placeholder.jpg'} alt="" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 flex flex-col justify-between py-1">
                         <div>
@@ -219,21 +214,21 @@ const Navbar = () => {
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center bg-gray-50 rounded-lg p-1 border border-gray-100">
                                     <button 
-                                      onClick={() => updateQuantity(item.product.id, -0.5)}
+                                      onClick={() => updateQuantity(item.product._id, -0.5)} 
                                       className="w-6 h-6 flex items-center justify-center hover:bg-white rounded shadow-sm text-charcoal transition-all"
                                     >
                                       <Minus size={12} />
                                     </button>
                                     <span className="w-10 text-center text-sm font-bold text-charcoal">{item.quantity}</span>
                                     <button 
-                                      onClick={() => updateQuantity(item.product.id, 0.5)}
+                                      onClick={() => updateQuantity(item.product._id, 0.5)} 
                                       className="w-6 h-6 flex items-center justify-center hover:bg-white rounded shadow-sm text-charcoal transition-all"
                                     >
                                       <Plus size={12} />
                                     </button>
                                 </div>
                                 <button 
-                                  onClick={() => removeItem(item.product.id)}
+                                  onClick={() => removeItem(item.product._id)} 
                                   className="text-xs text-rose-400 hover:text-deep-rose underline decoration-rose-200 underline-offset-2"
                                 >
                                   Xóa
@@ -242,7 +237,7 @@ const Navbar = () => {
                         </div>
                         <div className="flex justify-between items-end mt-2">
                              <p className="font-serif font-bold text-lg text-deep-rose">
-                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(parsePrice(item.product.price) * item.quantity)}
+                                {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.product.price * item.quantity)}
                              </p>
                         </div>
                     </div>
@@ -281,7 +276,7 @@ const Navbar = () => {
                   Thanh toán qua Zalo
               </button>
               <p className="text-center text-[10px] text-charcoal/40 mt-4 font-medium uppercase tracking-widest">
-                  Cam kết chất lượng • Đổi trả trong 7 ngày
+                  Cam kết chất lượng • Đổi trả trong vòng 3 ngày đầu tiên khi mua sản phẩm
               </p>
           </div>
         )}

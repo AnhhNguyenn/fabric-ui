@@ -1,3 +1,4 @@
+// src/components/ProductDetailModal.tsx
 "use client";
 import React, { useState } from 'react';
 import { Product } from '../types';
@@ -23,13 +24,29 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
 
   const handleAddToCart = () => {
     setIsAdding(true);
-    addItem(product, quantity);
+    // Lưu ý: product.features không còn tồn tại trong Product interface, nhưng logic thêm vào giỏ hàng là đúng
+    addItem(product, quantity); 
     setTimeout(() => {
       setIsAdding(false);
-      // Optional: Close modal after adding? Keeping it open is usually better UX, 
-      // but since the cart drawer opens on top, it might be fine to keep modal open behind it.
     }, 1000);
   };
+
+  // Lấy ảnh đầu tiên, dùng placeholder nếu không có ảnh
+  const imageUrl = product.imageUrls?.[0] || 'https://via.placeholder.com/600x800?text=No+Image';
+  
+  // Lấy danh mục, dùng tên nếu category là object, hoặc dùng giá trị nếu là string ID
+  const categoryName = typeof product.category === 'object' 
+    ? (product.category as any).name || 'Vải' 
+    : 'Vải';
+    
+  // Format giá
+  const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price);
+  
+  // Dữ liệu Features tạm thời (Vì Product interface mới không có features)
+  const dummyFeatures = [
+    "100% Tơ tằm tự nhiên", "Khổ vải 1.5m", "Không tích điện", "Giữ ấm mùa đông, mát mùa hè"
+  ];
+
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
@@ -56,7 +73,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
         {/* --- LEFT: IMAGE SECTION --- */}
         <div className="w-full md:w-[45%] h-[30vh] md:h-auto relative bg-lavender-blush group shrink-0">
            <img 
-            src={product.image} 
+            src={imageUrl} // FIX: Dùng imageUrl đã được tính toán
             alt={product.name} 
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
            />
@@ -65,7 +82,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
            {/* Tag Overlay */}
            <div className="absolute top-6 left-6 hidden md:block">
               <span className="bg-white/90 backdrop-blur px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-deep-rose shadow-sm border border-white">
-                 {product.tag}
+                 {product.tag || 'MỚI'}
               </span>
            </div>
         </div>
@@ -80,7 +97,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
               <div className="flex justify-between items-start mb-2">
                  <div>
                     <div className="flex items-center gap-2 mb-2">
-                         <span className="text-rose-accent text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">{product.type} Collection</span>
+                         <span className="text-rose-accent text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">{categoryName} Collection</span>
                          <div className="flex text-amber-400">
                             {[1,2,3,4,5].map(i => <Star key={i} size={10} fill="currentColor" />)}
                          </div>
@@ -99,7 +116,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
 
               {/* Price Row */}
               <div className="flex items-end gap-3 mb-6 pb-6 border-b border-dashed border-rose-100">
-                  <span className="text-2xl md:text-3xl font-serif text-deep-rose font-medium">{product.price}</span>
+                  <span className="text-2xl md:text-3xl font-serif text-deep-rose font-medium">{formattedPrice}/m</span> {/* FIX: Định dạng giá */}
                   <span className="mb-1.5 text-xs text-gray-400 line-through">550.000đ/m</span>
                   <span className="mb-1.5 px-2 py-0.5 bg-rose-100 text-deep-rose text-[10px] font-bold rounded uppercase">Tiết kiệm 20%</span>
               </div>
@@ -113,7 +130,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
               <div className="bg-lavender-blush/40 rounded-2xl p-5 mb-6">
                  <h4 className="font-serif text-charcoal text-base mb-3 font-bold">Chi tiết sản phẩm</h4>
                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4">
-                   {product.features.map((f, i) => (
+                   {/* Dùng features tạm thời nếu API không trả về mảng features */}
+                   {dummyFeatures.map((f, i) => ( 
                       <div key={i} className="flex items-start gap-2 text-xs md:text-sm text-charcoal/80">
                          <Check size={14} className="text-deep-rose mt-0.5 flex-shrink-0" />
                          <span>{f}</span>

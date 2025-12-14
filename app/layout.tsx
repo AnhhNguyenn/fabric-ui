@@ -1,15 +1,25 @@
+// app/layout.tsx
+import '../styles/globals.css';
+import '../src/index.css';
 import { CartProvider } from '../src/context/CartContext';
-import Footer from '../src/components/Footer';
-import '../src/index.css'
+import { AuthProvider } from '../src/context/AuthContext'; 
+// Giả định component Footer đã tồn tại trong dự án
+import Footer from '../src/components/Footer'; 
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <body>
-        <CartProvider>
-          {children}
-          <Footer />
-        </CartProvider>
+        <AuthProvider> 
+          <CartProvider> 
+            {children}
+          </CartProvider>
+        </AuthProvider>
+        <Footer />
       </body>
     </html>
   );
