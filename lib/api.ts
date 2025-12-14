@@ -3,7 +3,6 @@ import { Product, SiteConfig } from '../types';
 
 // ========================================================================
 // MOCK DATA - Dữ liệu giả cho mục đích phát triển giao diện
-// Thay thế phần này bằng kết nối backend thực tế của bạn (ví dụ: Sanity, Strapi, v.v.)
 // ========================================================================
 
 const mockProducts: Product[] = [
@@ -81,7 +80,7 @@ const mockSiteConfig: SiteConfig = {
 };
 
 // ========================================================================
-// API FUNCTIONS - Các hàm để lấy dữ liệu
+// API FUNCTIONS - Các hàm để thao tác với dữ liệu
 // ========================================================================
 
 /**
@@ -89,14 +88,12 @@ const mockSiteConfig: SiteConfig = {
  */
 export async function getAllProducts(): Promise<Product[]> {
   console.log("Fetching all mock products...");
-  // Giả lập độ trễ mạng
   await new Promise(resolve => setTimeout(resolve, 50)); 
   return mockProducts;
 }
 
 /**
  * Lấy một sản phẩm theo slug (từ dữ liệu giả)
- * @param slug - Slug của sản phẩm
  */
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   console.log(`Fetching mock product with slug: ${slug}...`);
@@ -112,4 +109,36 @@ export async function getSiteConfig(): Promise<SiteConfig> {
   console.log("Fetching mock site config...");
   await new Promise(resolve => setTimeout(resolve, 50));
   return mockSiteConfig;
+}
+
+/**
+ * **MỚI: Tạo một sản phẩm mới (trong dữ liệu giả)**
+ * @param productData - Dữ liệu cho sản phẩm mới, không bao gồm _id và slug
+ */
+export async function createProduct(productData: Omit<Product, '_id' | 'slug'>): Promise<Product> {
+    console.log("Creating a new mock product...");
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Helper để tạo slug từ tên sản phẩm
+    const generateSlug = (name: string) => 
+      name.toLowerCase()
+          .replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a")
+          .replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e")
+          .replace(/ì|í|ị|ỉ|ĩ/g, "i")
+          .replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o")
+          .replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u")
+          .replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y")
+          .replace(/đ/g, "d")
+          .replace(/\s+/g, '-') // thay thế khoảng trắng bằng gạch nối
+          .replace(/[^a-z0-9-]/g, ''); // loại bỏ các ký tự không hợp lệ
+
+    const newProduct: Product = {
+        _id: (mockProducts.length + 1).toString(), // Tạo ID mới đơn giản
+        slug: generateSlug(productData.name), // Tạo slug từ tên
+        ...productData
+    };
+
+    mockProducts.push(newProduct);
+    console.log("New product created:", newProduct);
+    return newProduct;
 }
