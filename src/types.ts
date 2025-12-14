@@ -4,16 +4,40 @@ import React from 'react';
 
 // --- API-Derived Types ---
 
-export interface Seo {
-  title?: string;
-  description?: string;
-  keywords?: string;
+// THÊM: Định nghĩa cho Open Graph (Dữ liệu chia sẻ social)
+export interface OpenGraph {
+  title: string;
+  description: string;
+  image: string; // URL ảnh
 }
 
+// CẬP NHẬT: Định nghĩa cho SEO
+export interface Seo {
+  // Các trường cũ (cần đổi tên/bổ sung để khớp với code page.tsx)
+  metaTitle?: string; // Tên đã được sử dụng trong page.tsx
+  metaDescription?: string; // Tên đã được sử dụng trong page.tsx
+  title?: string; // Có thể giữ lại nếu API trả về (backup cho metaTitle)
+  description?: string; // Có thể giữ lại nếu API trả về (backup cho metaDescription)
+  keywords?: string; // Đã có
+  
+  // Các trường mới được sử dụng trong page.tsx
+  slug?: string;
+  canonicalUrl?: string;
+  
+  // Trường Open Graph
+  openGraph?: OpenGraph;
+}
+
+// CẬP NHẬT: Định nghĩa cho Category
+// Lỗi chính là thiếu trường 'seo' trong Category
 export interface Category {
   _id: string; 
   name: string;
   description: string;
+  // Bổ sung trường SEO
+  seo?: Seo; 
+  createdAt?: string; // Nên thêm nếu có
+  updatedAt?: string; // Nên thêm nếu có
 }
 
 export interface Product {
@@ -23,16 +47,16 @@ export interface Product {
   price: number; 
   category: string | Category; 
   imageUrls: string[]; 
-  seo?: Seo; // <<<< FIX: Đã thêm trường SEO bị thiếu
+  seo?: Seo; // Trường này đã có
   tag?: string; 
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface User {
-    _id: string;
-    name: string;
-    email: string;
+  _id: string;
+  name: string;
+  email: string;
 }
 
 // --- Cart Types (Cập nhật ProductId sang string) ---
