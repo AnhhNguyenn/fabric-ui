@@ -37,7 +37,7 @@ const Hero = () => {
             <div className="relative mb-8 md:mb-12 w-full max-w-5xl">
                 {/* Background Giant Text - Only visible on larger screens to avoid clutter */}
                 <h1 className="hidden md:block font-serif text-[18vw] leading-[0.8] text-deep-rose opacity-5 mix-blend-overlay absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full select-none pointer-events-none whitespace-nowrap">
-                    MUSE SILK
+                    RiCa
                 </h1>
                 
                 <h1 className="relative font-serif text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold text-charcoal leading-[0.95] tracking-tight animate-fade-up opacity-0" style={{ animationDelay: '0.3s' }}>

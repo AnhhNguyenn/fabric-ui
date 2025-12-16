@@ -37,7 +37,7 @@ const Navbar = () => {
 
   const handleZaloCheckout = () => {
     checkoutZalo(); 
-    closeCart(); // Đóng giỏ hàng sau khi chuyển sang Zalo
+    closeCart();
   };
 
   return (
@@ -73,7 +73,7 @@ const Navbar = () => {
           {/* Center Logo */}
           <div className="flex justify-center">
             <button className="text-center group" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <h1 className="font-serif text-4xl font-bold text-deep-rose tracking-tighter group-hover:opacity-80 transition-opacity">MUSE</h1>
+              <h1 className="font-serif text-4xl font-bold text-deep-rose tracking-tighter group-hover:opacity-80 transition-opacity">RiCa</h1>
               <p className="text-[10px] uppercase tracking-[0.4em] text-rose-accent mt-1 font-semibold">Fabric & Silk</p>
             </button>
           </div>

@@ -3,10 +3,10 @@
 import axios from 'axios';
 import { Product, Category, User } from '../types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL; 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL; 
 
 if (!API_BASE_URL) {
-    console.error("[CONFIG ERROR] NEXT_PUBLIC_API_URL chưa được định nghĩa.");
+    console.error("[CONFIG ERROR] NEXT_PUBLIC_API_BASE_URL chưa được định nghĩa. Vui lòng kiểm tra file .env.local");
 }
 
 const api = axios.create({

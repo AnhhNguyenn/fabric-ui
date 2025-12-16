@@ -59,7 +59,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         <div>
           <div className="text-center mb-8 border-b pb-4">
-             <h1 className="font-serif text-4xl font-bold text-deep-rose tracking-tighter">MUSE</h1>
+             <h1 className="font-serif text-4xl font-bold text-deep-rose tracking-tighter">RiCa</h1>
              <p className="text-[10px] uppercase tracking-[0.4em] text-rose-accent mt-1 font-semibold">CMS QUẢN TRỊ</p>
           </div>
           <nav>

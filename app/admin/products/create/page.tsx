@@ -227,7 +227,7 @@ export default function CreateProductPage() {
                             <label className="block text-sm font-medium text-gray-700">Meta Title <span className="text-red-500">*</span></label>
                             <input 
                                 type="text" 
-                                placeholder="VD: Lụa Tơ Tằm Hồng Phấn | Muse Fabric"
+                                placeholder="VD: Lụa Tơ Tằm Hồng Phấn | RiCa"
                                 required
                                 value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)}
                                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-rose-400 focus:border-rose-400 transition"
@@ -236,7 +236,7 @@ export default function CreateProductPage() {
                         <div className="space-y-4">
                             <label className="block text-sm font-medium text-gray-700">Meta Description <span className="text-red-500">*</span></label>
                             <textarea 
-                                placeholder="VD: Mua lụa tơ tằm nguyên chất, satin, umi tại Muse Fabric với giá tốt nhất."
+                                placeholder="VD: Mua lụa tơ tằm nguyên chất, satin, umi tại RiCa với giá tốt nhất."
                                 required
                                 rows={3}
                                 value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)}

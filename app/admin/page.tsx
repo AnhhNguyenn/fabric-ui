@@ -26,7 +26,7 @@ export default function AdminDashboardPage() {
                 <h1 className="text-4xl font-extrabold text-gray-800 font-serif">
                     👋 Chào mừng, {user?.name || 'Quản trị viên'}!
                 </h1>
-                <p className="text-gray-500 mt-2 text-lg">Hệ thống quản lý Muse Fabric đã sẵn sàng.</p>
+                <p className="text-gray-500 mt-2 text-lg">Hệ thống quản lý RiCa đã sẵn sàng.</p>
             </header>
             
             {/* Stats Cards - Responsive Grid */}

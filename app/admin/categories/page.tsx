@@ -222,7 +222,7 @@ export default function CategoryManagementPage() {
                 </h3>
                 <input 
                     type="text" 
-                    placeholder="Meta Title: VD: Danh mục Lụa Tơ Tằm | Muse Fabric (BẮT BUỘC)" 
+                    placeholder="Meta Title: VD: Danh mục Lụa Tơ Tằm | RiCa (BẮT BUỘC)" 
                     required
                     value={newMetaTitle}
                     onChange={(e) => setNewMetaTitle(e.target.value)}

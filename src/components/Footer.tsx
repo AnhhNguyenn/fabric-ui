@@ -11,11 +11,11 @@ const Footer = () => {
                 {/* Logo & Mission */}
                 <div className="lg:w-1/3 flex flex-col items-center lg:items-start">
                     <div className="text-center lg:text-left">
-                        <h1 className="font-serif text-4xl font-bold text-deep-rose tracking-tighter">MUSE</h1>
+                        <h1 className="font-serif text-4xl font-bold text-deep-rose tracking-tighter">RiCa</h1>
                         <p className="text-[10px] uppercase tracking-[0.4em] text-rose-accent mt-1 font-semibold">Fabric & Silk</p>
                     </div>
                     <p className="mt-6 max-w-sm text-charcoal/60 leading-relaxed font-light">
-                        Vẻ đẹp đến từ những gì mềm mại và tự nhiên nhất. Muse Fabric & Silk mang đến những thước vải chất lượng, được dệt nên từ tình yêu và sự tôn trọng thiên nhiên.
+                        Vẻ đẹp đến từ những gì mềm mại và tự nhiên nhất. RiCa mang đến những bộ áo dài chất lượng, được dệt nên từ tình yêu và sự tôn trọng.
                     </p>
                 </div>
 
@@ -45,7 +45,7 @@ const Footer = () => {
                 <div className="lg:w-1/3 w-full max-w-md">
                     <h3 className="font-bold uppercase tracking-wider text-charcoal mb-4">Nhận Bản Tin</h3>
                     <p className="text-sm text-charcoal/60 mb-6 font-light">
-                        Đừng bỏ lỡ các bộ sưu tập mới và ưu đãi độc quyền từ Muse.
+                        Đừng bỏ lỡ các bộ sưu tập mới và ưu đãi độc quyền từ RiCa.
                     </p>
                     <form className="flex items-center gap-2 bg-white border border-rose-100 p-2 rounded-xl focus-within:border-deep-rose focus-within:ring-2 focus-within:ring-deep-rose/20 transition-all shadow-soft">
                         <input 
@@ -63,7 +63,7 @@ const Footer = () => {
             {/* Bottom Section: Copyright & Socials */}
             <div className="mt-16 pt-8 border-t border-rose-100 flex flex-col md:flex-row justify-between items-center gap-6">
                 <p className="text-xs text-charcoal/50 flex items-center gap-1.5">
-                    © {new Date().getFullYear()} Muse. Made with <Heart size={12} className="text-deep-rose fill-current"/> in Vietnam.
+                    © {new Date().getFullYear()} RiCa. Made with <Heart size={12} className="text-deep-rose fill-current"/> in Vietnam.
                 </p>
                 <div className="flex items-center gap-4">
                     <a href="#" className="text-charcoal/40 hover:text-deep-rose transition-colors"><Facebook size={18} /></a>

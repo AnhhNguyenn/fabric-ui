@@ -64,7 +64,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
     
-    let message = "Đơn hàng mới từ website (Muse Fabric):\n\n";
+    let message = "Đơn hàng mới từ website (RiCa):\n\n";
     items.forEach((item, index) => {
       const imageUrl = item.product.imageUrls?.[0] || 'Không có ảnh'; 
       const priceFormatted = item.product.price.toLocaleString('vi-VN');

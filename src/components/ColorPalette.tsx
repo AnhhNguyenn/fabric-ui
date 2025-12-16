@@ -8,7 +8,7 @@ const ColorPalette = () => {
 
   return (
     <section id="palette" className="py-20 md:py-32 bg-charcoal text-white relative overflow-hidden">
-      <div className="container mx-auto px-4 md:px-6 mb-10 md:mb-16 relative z-10">
+      <div className="container mx-auto px-6 mb-10 md:mb-16 relative z-10">
          <div className="flex flex-col md:flex-row justify-between items-start md:items-end">
             <h2 className="font-serif text-5xl md:text-7xl text-white leading-none">
                 Palette <span className="block text-rose-accent text-4xl md:text-5xl mt-2 italic font-light">of Nature</span>
@@ -20,7 +20,7 @@ const ColorPalette = () => {
       </div>
 
       {/* Responsive Layout: Adjusted Flex Ratios for better balance */}
-      <div className="container mx-auto px-4 md:px-6 h-[600px] md:h-[600px] flex flex-col md:flex-row gap-3 md:gap-4 transition-all">
+      <div className="container mx-auto px-6 h-[600px] md:h-[600px] flex flex-col md:flex-row gap-3 md:gap-4 transition-all">
           {COLORS.map((color, index) => {
               const isActive = activeIndex === index;
               return (

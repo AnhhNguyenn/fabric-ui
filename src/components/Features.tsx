@@ -7,10 +7,10 @@ const Features = () => {
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-full md:w-1/2 h-full bg-lavender-blush md:-skew-x-12 opacity-50 z-0"></div>
 
-      <div className="container mx-auto px-4 md:px-6 relative z-10">
+      <div className="container mx-auto px-6 relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-20 gap-6">
             <h2 className="font-serif text-4xl md:text-7xl text-charcoal leading-tight">
-                Why <span className="italic text-deep-rose">Muse?</span>
+                Why <span className="italic text-deep-rose">RiCa?</span>
             </h2>
             <p className="text-base md:text-lg text-charcoal/60 max-w-md md:text-right border-b pb-4 border-rose-200">
                 Chất lượng vượt trội. Thiết kế bền vững. <br className="hidden md:block" /> Cảm giác không thể chối từ.

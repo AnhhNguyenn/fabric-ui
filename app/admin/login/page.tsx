@@ -44,7 +44,7 @@ export default function AdminLoginPage() {
       
       {/* Header Logo */}
       <div className="text-center">
-         <h1 className="font-serif text-5xl font-extrabold text-deep-rose tracking-tighter">MUSE</h1>
+         <h1 className="font-serif text-5xl font-extrabold text-deep-rose tracking-tighter">RiCa</h1>
          <p className="text-xs uppercase tracking-[0.4em] text-rose-accent mt-2 font-semibold">CMS Đăng nhập</p>
       </div>
 
