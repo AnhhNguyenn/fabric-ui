@@ -11,12 +11,12 @@ if (!API_BASE_URL) {
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // QUAN TRỌNG: Tuyệt đối không để headers 'Content-Type' mặc định ở đây.
+  // Điều này cho phép trình duyệt tự động thêm 'boundary' khi gửi FormData (upload ảnh)
+  // và tự động dùng 'application/json' khi gửi Object thông thường.
 });
 
-// Interceptor 1: Thêm Bearer Token 
+// Interceptor 1: Thêm Bearer Token tự động từ localStorage cho các yêu cầu quản trị
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
@@ -33,14 +33,14 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor 2: Xử lý lỗi phản hồi và Log chi tiết 
+// Interceptor 2: Xử lý lỗi phản hồi và Log chi tiết để dễ dàng debug lỗi 400/500
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
     if (error.response) {
-      // Lỗi từ server (có status code)
+      // Lỗi từ server (có status code như 400, 401, 500)
       console.error(
         "[API ERROR] Mã lỗi:", 
         error.response.status, 
@@ -50,10 +50,9 @@ api.interceptors.response.use(
         error.response.data
       );
     } else if (error.request) {
-      // Không nhận được phản hồi (lỗi mạng/CORS)
+      // Lỗi mạng hoặc lỗi CORS (Không nhận được phản hồi)
       console.error("[API ERROR] KHÔNG CÓ PHẢN HỒI từ server. Kiểm tra API URL:", API_BASE_URL);
     } else {
-      // Lỗi trong quá trình thiết lập request
       console.error("[API ERROR] Lỗi Request Setup:", error.message);
     }
     return Promise.reject(error);
@@ -61,13 +60,12 @@ api.interceptors.response.use(
 );
 
 
-// --- API CLIENTS (Đã xóa getProfile và thêm log) ---
+// --- API CLIENTS ---
 export const authApi = {
     login: async (credentials: any): Promise<{ access_token: string }> => {
         const response = await api.post('/auth/login', credentials);
         return response.data;
     },
-    // Đã xóa getProfile vì endpoint này không tồn tại (lỗi 404)
     register: async (data: any): Promise<User> => {
         const response = await api.post('/users', data);
         return response.data;
@@ -84,15 +82,12 @@ export const productApi = {
         return response.data;
     },
     create: async (data: FormData): Promise<Product> => {
-        const response = await api.post('/products', data, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        // Axios tự nhận diện FormData và cấu hình header 'multipart/form-data' kèm boundary phù hợp
+        const response = await api.post('/products', data);
         return response.data;
     },
     update: async (id: string, data: FormData): Promise<Product> => {
-        const response = await api.put(`/products/${id}`, data, {
-             headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        const response = await api.put(`/products/${id}`, data);
         return response.data;
     },
     delete: async (id: string): Promise<void> => {
