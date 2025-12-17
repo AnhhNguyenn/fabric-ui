@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { productApi, categoryApi } from '../../../../src/utils/api';
 import { Category } from '../../../../src/types';
-// Đã xóa 'Tag' ở đây để tránh lỗi Build trên Vercel
+// Đã xóa 'Tag' vì bạn không dùng icon này trong giao diện
 import { Save, Image, Loader2, Info, DollarSign, Search, Zap, Share2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-// Hàm hỗ trợ tạo slug chuẩn SEO
 const createSlug = (name: string) => {
   if (!name) return '';
   return name.toLowerCase()
@@ -24,7 +23,6 @@ export default function CreateProductPage() {
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState<FileList | null>(null);
 
-  // Form data
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<number | ''>('');
@@ -32,65 +30,56 @@ export default function CreateProductPage() {
   const [tag, setTag] = useState('');
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
+  
+  // Các biến OG để trống nhưng vẫn giữ để Form hoạt động, xóa 'set' nếu không dùng trong hàm xử lý
   const [ogTitle, setOgTitle] = useState('');
   const [ogDescription, setOgDescription] = useState('');
   const [ogImage, setOgImage] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await categoryApi.getAll();
-        setCategories(data);
-        if (data.length > 0) setCategoryId(data[0]._id);
-      } catch (err) {
-        console.error("Lỗi tải danh mục:", err);
-      }
-    };
-    fetchCategories();
+    categoryApi.getAll().then(data => {
+      setCategories(data);
+      if (data.length > 0) setCategoryId(data[0]._id);
+    }).catch(console.error);
   }, []);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) setFileList(e.target.files);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
-    // Validation các trường bắt buộc
     if (!name || !price || !categoryId || !fileList || fileList.length === 0) {
-      setFormError('Vui lòng điền Tên, Giá, Danh mục và chọn Hình ảnh.');
+      setFormError('Vui lòng điền đầy đủ các thông tin bắt buộc (*).');
       return;
     }
 
-    setLoading(true); // Bật loading để nút không bị trắng
+    setLoading(true);
     const formData = new FormData();
     const productSlug = createSlug(name);
 
-    // 1. Gửi các trường cơ bản (Khớp với CreateProductDto ở BE)
+    // 1. Gửi các trường cơ bản
     formData.append('name', name.trim());
     formData.append('description', description.trim());
     formData.append('price', price.toString());
-    formData.append('category', categoryId); 
+    formData.append('category', categoryId);
     formData.append('tag', tag);
 
-    // 2. Gửi SEO đúng định dạng Object lồng nhau cho NestJS
-    // Việc dùng 'seo[key]' giúp BE bóc tách dữ liệu vào đúng SeoDto
+    // 2. Gửi SEO lồng nhau theo đúng cấu trúc Backend yêu cầu
     formData.append('seo[metaTitle]', metaTitle || name);
     formData.append('seo[metaDescription]', metaDescription || description);
     formData.append('seo[slug]', productSlug);
     formData.append('seo[canonicalUrl]', `/products/${productSlug}`);
     formData.append('seo[keywords]', tag);
-
-    // 3. Gửi Open Graph lồng trong SEO (Nếu BE của bạn yêu cầu cấu hình này)
+    
+    // Đóng gói OG vào trong SEO để tránh lỗi "property ... should not exist"
     formData.append('seo[openGraph][title]', ogTitle || metaTitle || name);
     formData.append('seo[openGraph][description]', ogDescription || metaDescription || description);
     formData.append('seo[openGraph][image]', ogImage);
 
-    // 4. Gửi file ảnh (Key 'files' khớp với FilesInterceptor ở BE)
-    for (let i = 0; i < fileList.length; i++) {
-      formData.append('files', fileList[i]);
+    if (fileList) {
+      for (let i = 0; i < fileList.length; i++) {
+        formData.append('files', fileList[i]);
+      }
     }
 
     try {
@@ -98,26 +87,23 @@ export default function CreateProductPage() {
       alert('Tạo sản phẩm thành công!');
       router.push('/admin/products');
     } catch (error: any) {
-      // Hiển thị lỗi chi tiết từ BE để dễ debug
       const msg = error.response?.data?.message;
       setFormError(Array.isArray(msg) ? msg.join(', ') : msg || 'Lỗi kết nối API.');
-      console.error("Lỗi BE:", error.response?.data);
+      console.error("Lỗi 400 chi tiết:", error.response?.data);
     } finally {
-      setLoading(false); // Tắt loading để hiện lại chữ trên nút bấm
+      setLoading(false);
     }
   };
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 pb-20 pt-10">
       <h1 className="text-3xl font-bold text-gray-800 font-serif">Tạo Sản phẩm mới</h1>
-      
       {formError && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl flex items-center">
           <Info className="w-5 h-5 mr-3 flex-shrink-0" />
           <span className="text-sm font-medium">{formError}</span>
         </div>
       )}
-
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -127,91 +113,60 @@ export default function CreateProductPage() {
               </h2>
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Tên sản phẩm *</label>
-                <input type="text" required value={name} onChange={(e) => setName(e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none transition" />
+                <input type="text" required value={name} onChange={e => setName(e.target.value)}
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Mô tả</label>
-                <textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none transition" />
+                <textarea rows={4} value={description} onChange={e => setDescription(e.target.value)}
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-700">Giá (VNĐ/m) *</label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input type="number" required value={price} onChange={(e) => setPrice(Number(e.target.value))}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none" />
-                  </div>
+                  <input type="number" required value={price} onChange={e => setPrice(Number(e.target.value))}
+                    className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-700">Danh mục *</label>
-                  <select required value={categoryId} onChange={(e) => setCategoryId(e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none bg-white">
+                  <select required value={categoryId} onChange={e => setCategoryId(e.target.value)}
+                    className="w-full p-3 border border-gray-200 rounded-xl bg-white">
                     {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700">Tag (VD: New)</label>
-                  <input type="text" value={tag} onChange={(e) => setTag(e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none" />
+                  <label className="text-sm font-semibold text-gray-700">Tag</label>
+                  <input type="text" value={tag} onChange={e => setTag(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl" />
                 </div>
               </div>
             </div>
-
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-4">
               <h2 className="text-xl font-bold text-rose-500 border-b pb-3 font-serif flex items-center gap-2">
                 <Image className="w-5 h-5" /> Hình ảnh sản phẩm *
               </h2>
-              <input type="file" multiple required onChange={handleFileChange}
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 cursor-pointer" />
+              <input type="file" multiple required onChange={e => setFileList(e.target.files)} className="w-full text-sm" />
             </div>
           </div>
-
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
               <h2 className="text-lg font-bold text-rose-500 border-b pb-2 font-serif flex items-center gap-2">
                 <Search className="w-4 h-4" /> Cấu hình SEO
               </h2>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Title</label>
-                <input type="text" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)}
-                  placeholder="Bỏ trống sẽ lấy tên SP"
-                  className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Description</label>
-                <textarea rows={3} value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)}
-                  placeholder="Bỏ trống sẽ lấy mô tả SP"
-                  className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
-              </div>
+              <input placeholder="Meta Title" value={metaTitle} onChange={e => setMetaTitle(e.target.value)} className="w-full p-2.5 border rounded-lg text-sm" />
+              <textarea placeholder="Meta Description" rows={3} value={metaDescription} onChange={e => setMetaDescription(e.target.value)} className="w-full p-2.5 border rounded-lg text-sm" />
             </div>
-
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
               <h2 className="text-lg font-bold text-rose-500 border-b pb-2 font-serif flex items-center gap-2">
-                <Share2 className="w-4 h-4" /> Open Graph (Tùy chọn)
+                <Share2 className="w-4 h-4" /> Open Graph
               </h2>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">OG Image URL</label>
-                <input type="url" value={ogImage} onChange={(e) => setOgImage(e.target.value)}
-                  className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
-              </div>
+              <input placeholder="OG Title" value={ogTitle} onChange={e => setOgTitle(e.target.value)} className="w-full p-2.5 border rounded-lg text-sm" />
+              <textarea placeholder="OG Description" value={ogDescription} onChange={e => setOgDescription(e.target.value)} className="w-full p-2.5 border rounded-lg text-sm" />
+              <input placeholder="OG Image URL" value={ogImage} onChange={e => setOgImage(e.target.value)} className="w-full p-2.5 border rounded-lg text-sm" />
             </div>
-
-            {/* Sửa lại nút bấm để luôn hiện chữ rõ ràng */}
             <button type="submit" disabled={loading}
-              className="w-full bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-2xl font-bold uppercase tracking-widest shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-3 disabled:opacity-70">
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>ĐANG XỬ LÝ...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  <span>LƯU SẢN PHẨM</span>
-                </>
-              )}
+              className="w-full bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 disabled:opacity-70">
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+              <span>{loading ? 'ĐANG LƯU...' : 'LƯU SẢN PHẨM'}</span>
             </button>
           </div>
         </div>
