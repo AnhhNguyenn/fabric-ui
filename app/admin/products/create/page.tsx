@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { productApi, categoryApi } from '../../../../src/utils/api';
 import { Category } from '../../../../src/types';
+// Đã xóa 'Tag' khỏi lucide-react để tránh lỗi 'declared but never read' khi build
 import { Save, Image, Loader2, Info, DollarSign, Search, Zap, Share2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -57,8 +58,9 @@ export default function CreateProductPage() {
     e.preventDefault();
     setFormError(null);
 
-    if (!name || !price || !categoryId || !fileList || fileList.length === 0 || !metaTitle || !metaDescription || !ogTitle || !ogDescription || !ogImage) {
-      setFormError('Vui lòng điền đầy đủ thông tin Bán hàng, SEO và Open Graph.');
+    // Validation cơ bản
+    if (!name || !price || !categoryId || !fileList || fileList.length === 0 || !metaTitle || !metaDescription) {
+      setFormError('Vui lòng điền đầy đủ các thông tin bắt buộc (*).');
       return;
     }
 
@@ -66,22 +68,24 @@ export default function CreateProductPage() {
     const formData = new FormData();
     const productSlug = createSlug(name);
 
-    formData.append('name', name);
-    formData.append('description', description);
+    // 1. Gửi các trường cơ bản (Dạng phẳng để NestJS ValidationPipe không chặn)
+    formData.append('name', name.trim());
+    formData.append('description', description.trim());
     formData.append('price', price.toString());
     formData.append('category', categoryId); 
     formData.append('tag', tag);
 
-    formData.append('seo[metaTitle]', metaTitle);
-    formData.append('seo[metaDescription]', metaDescription);
-    formData.append('seo[slug]', productSlug);
-    formData.append('seo[canonicalUrl]', `/products/${productSlug}`);
-    formData.append('seo[keywords]', tag);
+    // 2. Gửi dữ liệu SEO & Open Graph (Phẳng hóa thay vì dùng seo[metaTitle])
+    formData.append('metaTitle', metaTitle);
+    formData.append('metaDescription', metaDescription);
+    formData.append('slug', productSlug);
+    formData.append('canonicalUrl', `/products/${productSlug}`);
+    formData.append('keywords', tag);
+    formData.append('ogTitle', ogTitle);
+    formData.append('ogDescription', ogDescription);
+    formData.append('ogImage', ogImage);
 
-    formData.append('seo[openGraph][title]', ogTitle);
-    formData.append('seo[openGraph][description]', ogDescription);
-    formData.append('seo[openGraph][image]', ogImage);
-
+    // 3. Gửi danh sách Files (Key 'files' phải trùng với FilesInterceptor ở BE)
     for (let i = 0; i < fileList.length; i++) {
       formData.append('files', fileList[i]);
     }
@@ -93,7 +97,9 @@ export default function CreateProductPage() {
     } catch (error: any) {
       const msg = error.response?.data?.message || 'Lỗi kết nối API.';
       setFormError(Array.isArray(msg) ? msg.join(', ') : msg);
+      console.error("Chi tiết lỗi BE:", error.response?.data);
     } finally {
+      // Đảm bảo loading được tắt dù thành công hay thất bại để hiện lại nút
       setLoading(false);
     }
   };
@@ -101,12 +107,14 @@ export default function CreateProductPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 pb-20">
       <h1 className="text-3xl font-bold text-gray-800 font-serif">Tạo Sản phẩm mới</h1>
+      
       {formError && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl flex items-center">
           <Info className="w-5 h-5 mr-3 flex-shrink-0" />
           <span className="text-sm font-medium">{formError}</span>
         </div>
       )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -114,16 +122,19 @@ export default function CreateProductPage() {
               <h2 className="text-xl font-bold text-rose-500 border-b pb-3 font-serif flex items-center gap-2">
                 <Zap className="w-5 h-5" /> Thông tin cơ bản
               </h2>
+              
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Tên sản phẩm *</label>
                 <input type="text" required value={name} onChange={(e) => setName(e.target.value)}
                   className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none transition" />
               </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-700">Mô tả</label>
                 <textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)}
                   className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none transition" />
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-700">Giá (VNĐ/m) *</label>
@@ -133,6 +144,7 @@ export default function CreateProductPage() {
                       className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-400 outline-none" />
                   </div>
                 </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-700">Danh mục *</label>
                   <select required value={categoryId} onChange={(e) => setCategoryId(e.target.value)}
@@ -140,6 +152,7 @@ export default function CreateProductPage() {
                     {categories.map(cat => <option key={cat._id} value={cat._id}>{cat.name}</option>)}
                   </select>
                 </div>
+
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-700">Tag (VD: New)</label>
                   <input type="text" value={tag} onChange={(e) => setTag(e.target.value)}
@@ -179,26 +192,39 @@ export default function CreateProductPage() {
                 <Share2 className="w-4 h-4" /> Open Graph
               </h2>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">OG Title *</label>
-                <input type="text" required value={ogTitle} onChange={(e) => setOgTitle(e.target.value)}
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">OG Title</label>
+                <input type="text" value={ogTitle} onChange={(e) => setOgTitle(e.target.value)}
                   className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">OG Description *</label>
-                <textarea rows={2} required value={ogDescription} onChange={(e) => setOgDescription(e.target.value)}
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">OG Description</label>
+                <textarea rows={2} value={ogDescription} onChange={(e) => setOgDescription(e.target.value)}
                   className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">OG Image URL *</label>
-                <input type="url" required value={ogImage} onChange={(e) => setOgImage(e.target.value)}
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">OG Image URL</label>
+                <input type="url" value={ogImage} onChange={(e) => setOgImage(e.target.value)}
                   className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
               </div>
             </div>
 
-            <button type="submit" disabled={loading}
-              className="w-full bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-2xl font-bold uppercase tracking-widest shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              Lưu Sản Phẩm
+            {/* Sửa lại UI nút bấm để không bị trắng chữ khi đang loading */}
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-2xl font-bold uppercase tracking-widest shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-3 disabled:opacity-70"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Đang xử lý...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  <span>Lưu Sản Phẩm</span>
+                </>
+              )}
             </button>
           </div>
         </div>
