@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { productApi, categoryApi } from '../../../../src/utils/api';
 import { Category } from '../../../../src/types';
-// Đã lọc sạch các icon không dùng để tránh lỗi "declared but never read"
 import { Save, Image, Loader2, Info, DollarSign, Search, Zap, Share2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -58,7 +57,6 @@ export default function CreateProductPage() {
     e.preventDefault();
     setFormError(null);
 
-    // Validation bắt buộc
     if (!name || !price || !categoryId || !fileList || fileList.length === 0 || !metaTitle || !metaDescription || !ogTitle || !ogDescription || !ogImage) {
       setFormError('Vui lòng điền đầy đủ thông tin Bán hàng, SEO và Open Graph.');
       return;
@@ -68,26 +66,22 @@ export default function CreateProductPage() {
     const formData = new FormData();
     const productSlug = createSlug(name);
 
-    // 1. Dữ liệu cơ bản
     formData.append('name', name);
     formData.append('description', description);
     formData.append('price', price.toString());
     formData.append('category', categoryId); 
     formData.append('tag', tag);
 
-    // 2. SEO Object
     formData.append('seo[metaTitle]', metaTitle);
     formData.append('seo[metaDescription]', metaDescription);
     formData.append('seo[slug]', productSlug);
     formData.append('seo[canonicalUrl]', `/products/${productSlug}`);
     formData.append('seo[keywords]', tag);
 
-    // 3. Open Graph
     formData.append('seo[openGraph][title]', ogTitle);
     formData.append('seo[openGraph][description]', ogDescription);
     formData.append('seo[openGraph][image]', ogImage);
 
-    // 4. File ảnh (Key 'files' khớp với Backend)
     for (let i = 0; i < fileList.length; i++) {
       formData.append('files', fileList[i]);
     }
@@ -107,17 +101,14 @@ export default function CreateProductPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 pb-20">
       <h1 className="text-3xl font-bold text-gray-800 font-serif">Tạo Sản phẩm mới</h1>
-      
       {formError && (
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl flex items-center">
           <Info className="w-5 h-5 mr-3 flex-shrink-0" />
           <span className="text-sm font-medium">{formError}</span>
         </div>
       )}
-
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* CỘT TRÁI: THÔNG TIN BÁN HÀNG */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
               <h2 className="text-xl font-bold text-rose-500 border-b pb-3 font-serif flex items-center gap-2">
@@ -166,19 +157,18 @@ export default function CreateProductPage() {
             </div>
           </div>
 
-          {/* CỘT PHẢI: SEO & OG */}
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
               <h2 className="text-lg font-bold text-rose-500 border-b pb-2 font-serif flex items-center gap-2">
                 <Search className="w-4 h-4" /> Cấu hình SEO
               </h2>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">Meta Title *</label>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Title *</label>
                 <input type="text" required value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)}
                   className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">Meta Description *</label>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Description *</label>
                 <textarea rows={3} required value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)}
                   className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
               </div>
@@ -189,17 +179,17 @@ export default function CreateProductPage() {
                 <Share2 className="w-4 h-4" /> Open Graph
               </h2>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">OG Title *</label>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">OG Title *</label>
                 <input type="text" required value={ogTitle} onChange={(e) => setOgTitle(e.target.value)}
                   className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">OG Description *</label>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">OG Description *</label>
                 <textarea rows={2} required value={ogDescription} onChange={(e) => setOgDescription(e.target.value)}
                   className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase">OG Image URL *</label>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">OG Image URL *</label>
                 <input type="url" required value={ogImage} onChange={(e) => setOgImage(e.target.value)}
                   className="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus:border-rose-400" />
               </div>
