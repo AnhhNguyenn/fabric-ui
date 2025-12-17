@@ -58,10 +58,14 @@ export default function CreateProductPage() {
     formData.append('category', categoryId);
 
     // 2. Đóng gói SEO lồng nhau cho đúng cấu trúc Backend mong đợi
-    formData.append('seo[metaTitle]', metaTitle || name);
-    formData.append('seo[metaDescription]', metaDescription || description);
-    formData.append('seo[slug]', productSlug);
-    formData.append('seo[canonicalUrl]', `/products/${productSlug}`);
+    formData.append('seo[title]', metaTitle || name);
+    formData.append('seo[description]', metaDescription || description);
+    
+    // keywords có thể tự sinh hoặc để trống
+    formData.append(
+      'seo[keywords]',
+      `${name}, ${categories.find(c => c._id === categoryId)?.name || ''}`
+    );
 
     if (fileList) {
       for (let i = 0; i < fileList.length; i++) {
