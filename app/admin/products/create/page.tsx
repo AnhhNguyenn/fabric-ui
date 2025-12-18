@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { productApi, categoryApi } from '../../../../src/utils/api';
 import { Category } from '../../../../src/types';
-// Chỉ giữ lại những icon thực sự có hiển thị trong return bên dưới
 import { Save, Image, Loader2, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
