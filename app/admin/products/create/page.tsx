@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { productApi, categoryApi } from '../../../../src/utils/api';
 import { Category } from '../../../../src/types';
-// Chỉ giữ lại những icon thực sự có hiển thị trong return bên dưới
 import { Save, Image, Loader2, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -61,7 +60,6 @@ export default function CreateProductPage() {
     formData.append('seo[title]', metaTitle || name);
     formData.append('seo[description]', metaDescription || description);
     
-    // keywords có thể tự sinh hoặc để trống
     formData.append(
       'seo[keywords]',
       `${name}, ${categories.find(c => c._id === categoryId)?.name || ''}`
