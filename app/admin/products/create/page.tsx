@@ -48,8 +48,7 @@ export default function CreateProductPage() {
 
     setLoading(true);
     const formData = new FormData();
-    const productSlug = createSlug(name);
-
+    
     // 1. Dữ liệu cơ bản
     formData.append('name', name.trim());
     formData.append('description', description.trim());
