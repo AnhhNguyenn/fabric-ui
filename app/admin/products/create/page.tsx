@@ -5,17 +5,6 @@ import { Category } from '../../../../src/types';
 import { Save, Image, Loader2, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-const createSlug = (name: string) => {
-  if (!name) return '';
-  return name.toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd').replace(/Đ/g, 'D')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
-};
-
 export default function CreateProductPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
