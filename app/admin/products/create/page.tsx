@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { productApi, categoryApi } from '../../../../src/utils/api';
 import { Category } from '../../../../src/types';
-import { Save, Image, Loader2, Info } from 'lucide-react';
+import { Save, Image, Loader2, Info, DollarSign, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CreateProductPage() {
@@ -30,28 +30,28 @@ export default function CreateProductPage() {
     e.preventDefault();
     setFormError(null);
 
-    // Kiểm tra các trường bắt buộc theo Schema BE
+    // Kiểm tra dữ liệu bắt buộc (name, price, category là bắt buộc trong Schema)
     if (!name || !price || !categoryId || !fileList || fileList.length === 0) {
-      setFormError('Vui lòng điền đủ Tên, Giá và chọn Ảnh.');
+      setFormError('Vui lòng điền đủ Tên, Giá và chọn ít nhất 1 Ảnh.');
       return;
     }
 
     setLoading(true);
     const formData = new FormData();
     
-    // 1. Dữ liệu cơ bản - Phải khớp chính xác với CreateProductDto
+    // 1. Dữ liệu cơ bản - KHỚP TỪNG CHỮ VỚI CreateProductDto
     formData.append('name', name.trim());
     formData.append('description', description.trim());
-    formData.append('price', price.toString()); // BE sẽ tự Type Number
+    formData.append('price', price.toString()); // BE dùng @Type(() => Number)
     formData.append('category', categoryId); // Phải là IsMongoId
 
-    // 2. SEO Object - Phải khớp chính xác với SeoDto
-    // Lưu ý: BE của mày dùng 'title' chứ không phải 'metaTitle'
+    // 2. SEO Object - Backend dùng SeoDto với title, description, keywords
+    // MÀY LƯU Ý: Tuyệt đối không gửi metaTitle vì DTO đéo có, sẽ bị forbidNonWhitelisted chặn
     formData.append('seo[title]', metaTitle.trim() || name.trim());
     formData.append('seo[description]', metaDescription.trim() || description.trim());
     formData.append('seo[keywords]', name.trim());
 
-    // 3. Upload File - Key 'files' khớp với FilesInterceptor('files')
+    // 3. File ảnh - Key 'files' khớp với FilesInterceptor trong Controller
     if (fileList) {
       for (let i = 0; i < fileList.length; i++) {
         formData.append('files', fileList[i]);
@@ -63,10 +63,10 @@ export default function CreateProductPage() {
       alert('Tạo sản phẩm thành công!');
       router.push('/admin/products');
     } catch (error: any) {
-      console.error("Lỗi chi tiết từ Server:", error.response?.data);
+      console.error("Lỗi BE trả về:", error.response?.data);
       const msg = error.response?.data?.message;
-      // Trả về lỗi chi tiết để mày dễ debug
-      setFormError(Array.isArray(msg) ? msg.join(', ') : msg || 'Lỗi 500: Kiểm tra lại ID Category hoặc Biến môi trường Cloudinary trên Vercel.');
+      // Trình bày lỗi từ ValidationPipe của NestJS
+      setFormError(Array.isArray(msg) ? msg.join(', ') : msg || 'Lỗi 500: Kiểm tra Cloudinary hoặc Database.');
     } finally {
       setLoading(false);
     }
@@ -142,8 +142,8 @@ export default function CreateProductPage() {
             <div className="flex items-center gap-4 border-2 border-dashed border-gray-200 p-6 rounded-2xl hover:bg-gray-50 transition-colors cursor-pointer relative">
               <Image className="w-8 h-8 text-gray-400" />
               <div className="flex flex-col">
-                <span className="text-sm font-medium text-gray-600">Nhấn để chọn hoặc kéo thả nhiều ảnh</span>
-                <span className="text-xs text-gray-400">PNG, JPG, WEBP lên đến 5MB</span>
+                <span className="text-sm font-medium text-gray-600">Nhấn để chọn nhiều ảnh</span>
+                <span className="text-xs text-gray-400">Yêu cầu ít nhất 1 ảnh</span>
               </div>
               <input 
                 type="file" 
@@ -153,30 +153,27 @@ export default function CreateProductPage() {
                 className="absolute inset-0 opacity-0 cursor-pointer" 
               />
             </div>
-            {fileList && fileList.length > 0 && (
-              <p className="text-sm text-green-600 font-medium mt-2 italic">✓ Đã chọn {fileList.length} ảnh</p>
-            )}
           </div>
         </div>
 
         <div className="p-6 border border-gray-100 rounded-2xl space-y-5 bg-gray-50/50">
           <h2 className="font-bold text-gray-800 flex items-center gap-2 text-lg">
-            <Search className="w-5 h-5 text-rose-500" /> Cấu hình SEO
+            <Search className="w-5 h-5 text-rose-500" /> SEO (Tùy chọn)
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Title</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">SEO Title</label>
               <input 
-                placeholder="Tiêu đề hiển thị trên Google" 
+                placeholder="Tiêu đề Google" 
                 value={metaTitle} 
                 onChange={e => setMetaTitle(e.target.value)} 
                 className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-rose-500 outline-none" 
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Meta Description</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">SEO Description</label>
               <textarea 
-                placeholder="Mô tả ngắn hiển thị trên kết quả tìm kiếm" 
+                placeholder="Mô tả Google" 
                 rows={1}
                 value={metaDescription} 
                 onChange={e => setMetaDescription(e.target.value)} 
@@ -192,12 +189,9 @@ export default function CreateProductPage() {
           className="w-full bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-rose-200 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Save className="w-6 h-6" />}
-          <span className="uppercase tracking-widest">{loading ? 'Đang xử lý dữ liệu...' : 'Lưu Sản Phẩm Ngay'}</span>
+          <span className="uppercase tracking-widest">{loading ? 'Đang lưu...' : 'Lưu Sản Phẩm'}</span>
         </button>
       </form>
     </div>
   );
 }
-
-// Thêm các icon thiếu vào import
-import { DollarSign, Search } from 'lucide-react';
