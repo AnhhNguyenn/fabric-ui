@@ -81,16 +81,10 @@
 //   hex: string;
 // } 
 
-// src/types.ts
-export interface Category {
-  _id: string | number; // Chấp nhận cả ID số và chuỗi
-  name: string;
-  slug?: string;
-  description?: string;
-  image?: string;
-  productCount?: number;
-}
 
+// src/types.ts
+
+// Định nghĩa Feature (Tính năng nổi bật)
 export interface Feature {
   id: number;
   title: string;
@@ -98,22 +92,34 @@ export interface Feature {
   icon: any;
 }
 
+// Định nghĩa Color (Bảng màu)
 export interface ColorSwatch {
   id: number;
   name: string;
   hex: string;
 }
 
+// Định nghĩa Category (Danh mục)
+export interface Category {
+  _id: string | number; // ID có thể là số hoặc chuỗi (vd: 'cat_1')
+  name: string;
+  slug?: string;
+  description?: string;
+  image?: string;
+  productCount?: number; // Số lượng sản phẩm (để hiển thị cho đẹp)
+}
+
+// Định nghĩa Product (Sản phẩm)
 export interface Product {
   _id: string | number;
   name: string;
-  price: number | string; // Chấp nhận giá dạng chuỗi hiển thị
+  price: string | number; // Quan trọng: Cho phép nhập giá dạng chuỗi "2.000.000đ"
   description?: string;
-  images?: string[];
-  image?: string; // Dùng cho hardcode
-  category?: Category | string; // Chấp nhận tên category
-  type?: string; // Dùng cho hardcode
-  tag?: string;
-  features?: string[];
+  images?: string[];      // Mảng ảnh (nếu có nhiều ảnh)
+  image?: string;         // Ảnh đại diện chính (dùng cho hardcode)
+  category?: string;      // Tên danh mục (lưu trực tiếp tên cho dễ hiển thị)
+  type?: string;          // Loại sản phẩm (Áo dài, Váy...)
+  tag?: string;           // Nhãn (Hot, New, Sale...)
+  features?: string[];    // Các đặc điểm (Vải mát, Co giãn...)
   createdAt?: string;
 }
