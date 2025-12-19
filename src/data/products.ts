@@ -3,9 +3,7 @@
 import { Product } from '../types';
 
 // === CƠ SỞ DỮ LIỆU SẢN PHẨM HARDCODE ===
-// HƯỚNG DẪN: Để thêm, sửa, hoặc xóa sản phẩm, hãy chỉnh sửa trực tiếp mảng `allProducts` dưới đây.
-// - ID: Phải là duy nhất cho mỗi sản phẩm.
-// - Image URLs: Đường dẫn phải bắt đầu bằng '/images/products/' và trỏ đến tệp trong thư mục `public/images/products`.
+// CÁC URL ẢNH ĐÃ ĐƯỢC THAY THẾ BẰNG PLACEHOLDER ĐỂ LOẠI BỎ LỖI 404.
 
 export const allProducts: Product[] = [
   {
@@ -16,8 +14,8 @@ export const allProducts: Product[] = [
     category: 'Vải lụa',
     tags: ['satin', 'cao cấp', 'áo dài'],
     imageUrls: [
-        '/images/products/lua-satin-01.jpg',
-        '/images/products/lua-satin-02.jpg'
+        'https://placehold.co/800x800/EAD9E5/472E4D?text=Lụa+Satin',
+        'https://placehold.co/800x800/D6C4D2/472E4D?text=Satin+2'
     ],
     stock: 100, // (mét)
   },
@@ -29,7 +27,7 @@ export const allProducts: Product[] = [
     category: 'Vải cotton',
     tags: ['cotton', 'hoa nhí', 'vintage'],
     imageUrls: [
-        '/images/products/cotton-hoanhi-01.jpg'
+        'https://placehold.co/800x800/F4E8D8/6B5B4B?text=Cotton+Hoa+Nhí'
     ],
     stock: 250,
   },
@@ -41,7 +39,7 @@ export const allProducts: Product[] = [
     category: 'Vải tafta',
     tags: ['tafta', 'ánh kim', 'dạ hội'],
     imageUrls: [
-        '/images/products/tafta-anhkim-01.jpg'
+        'https://placehold.co/800x800/D4C4B8/5C4B40?text=Tafta+Ánh+Kim'
     ],
     stock: 80,
   },
@@ -53,7 +51,7 @@ export const allProducts: Product[] = [
     category: 'Vải linen',
     tags: ['linen', 'tự nhiên', 'mùa hè'],
     imageUrls: [
-        '/images/products/linen-bot-01.jpg',
+        'https://placehold.co/800x800/E1DCD3/5E564D?text=Linen+Bột'
     ],
     stock: 150,
   }
@@ -62,40 +60,12 @@ export const allProducts: Product[] = [
 // === CÁC HÀM TIỆN ÍCH ĐỂ MÔ PHỎNG API ===
 
 export const getProducts = (): Promise<Product[]> => {
-    console.log("[Hardcode Service] Fetching all products.");
+    // console.log("[Hardcode Service] Fetching all products.");
     return Promise.resolve(allProducts);
 }
 
 export const getProductById = (id: string): Promise<Product | undefined> => {
-    console.log(`[Hardcode Service] Fetching product with id: ${id}`);
+    // console.log(`[Hardcode Service] Fetching product with id: ${id}`);
     const product = allProducts.find(p => p._id === id);
     return Promise.resolve(product);
 }
-
-export const createProduct = (data: Omit<Product, '_id'>): Promise<Product> => {
-  console.log("[Hardcode Service] Simulating product creation. No changes will be saved to the file.");
-  const newProduct: Product = {
-    _id: `prod_${Date.now()}`,
-    ...data,
-  };
-  return Promise.resolve(newProduct);
-};
-
-export const updateProduct = (id: string, data: Partial<Product>): Promise<Product> => {
-    console.log(`[Hardcode Service] Simulating product update for id: ${id}. No changes will be saved to the file.`);
-    const existingProduct = allProducts.find(p => p._id === id);
-    if (!existingProduct) {
-        return Promise.reject(new Error("Product not found"));
-    }
-    const updatedProduct = { ...existingProduct, ...data };
-    return Promise.resolve(updatedProduct);
-};
-
-export const deleteProduct = (id: string): Promise<{ message: string }> => {
-    console.log(`[Hardcode Service] Simulating product deletion for id: ${id}. No changes will be saved to the file.`);
-    const exists = allProducts.some(p => p._id === id);
-    if (!exists) {
-        return Promise.reject(new Error("Product not found"));
-    }
-    return Promise.resolve({ message: "Product deletion simulated successfully" });
-};

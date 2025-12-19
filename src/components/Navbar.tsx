@@ -1,7 +1,7 @@
 
 "use client";
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link'; // Import Link
+import Link from 'next/link'; 
 import { ShoppingBag, Search, Menu, X, MessageCircle, Minus, Plus, ShoppingCart, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
@@ -27,18 +27,24 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Giữ lại hàm này cho các nút khác
+  // === HÀM CUỘN TỚI KHU VỰC ===
   const scrollToSection = (id: string) => {
+    // Đóng menu mobile trước
+    setIsMobileMenuOpen(false);
+
     // Nếu đang ở trang chủ thì cuộn, ngược lại thì điều hướng về trang chủ rồi cuộn
     if (window.location.pathname === '/') {
-        const element = document.getElementById(id);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-        }
+        // Timeout nhỏ để đảm bảo menu mobile đã đóng và không gây giật cục
+        setTimeout(() => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, 50);
     } else {
+        // Nếu ở trang khác, điều hướng về trang chủ với hash
         window.location.href = `/#${id}`;
     }
-    setIsMobileMenuOpen(false);
   };
 
   const handleZaloCheckout = () => {
@@ -50,15 +56,13 @@ const Navbar = () => {
     <>
       <nav className={`fixed w-full z-40 transition-all duration-500 border-b ${scrolled ? 'bg-lavender-blush/90 backdrop-blur-xl border-rose-200 py-3 shadow-sm' : 'bg-transparent border-transparent py-6'}`}>
         <div className="container mx-auto px-6 grid grid-cols-3 items-center">
-          {/* Left Menu (Desktop) */}
+          
+          {/* === SỬA LỖI LẦN 2: Dùng button cuộn trang cho TẤT CẢ các mục === */}
           <div className="hidden md:flex items-center gap-10">
-            {/* --- THAY ĐỔI Ở ĐÂY --- */}
-            <Link href="/products" legacyBehavior>
-              <a className="text-deep-rose hover:text-rose-accent font-medium text-xs uppercase tracking-[0.15em] transition-colors relative group">
-                Sản phẩm
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-rose-accent transition-all group-hover:w-full"></span>
-              </a>
-            </Link>
+            <button onClick={() => scrollToSection('products')} className="text-deep-rose hover:text-rose-accent font-medium text-xs uppercase tracking-[0.15em] transition-colors relative group">
+              Sản phẩm
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-rose-accent transition-all group-hover:w-full"></span>
+            </button>
             <button onClick={() => scrollToSection('features')} className="text-deep-rose hover:text-rose-accent font-medium text-xs uppercase tracking-[0.15em] transition-colors relative group">
               Tính năng
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-rose-accent transition-all group-hover:w-full"></span>
@@ -69,7 +73,6 @@ const Navbar = () => {
             </button>
           </div>
           
-          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button 
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -79,17 +82,14 @@ const Navbar = () => {
             </button>
           </div>
 
-          {/* Center Logo */}
           <div className="flex justify-center">
-             <Link href="/" legacyBehavior>
-                <a className="text-center group">
-                    <h1 className="font-serif text-4xl font-bold text-deep-rose tracking-tighter group-hover:opacity-80 transition-opacity">RiCa</h1>
-                    <p className="text-[10px] uppercase tracking-[0.4em] text-rose-accent mt-1 font-semibold">Fabric & Silk</p>
-                </a>
+             <Link href="/" className="text-center group">
+                <h1 className="font-serif text-4xl font-bold text-deep-rose tracking-tighter group-hover:opacity-80 transition-opacity">RiCa</h1>
+                <p className="text-[10px] uppercase tracking-[0.4em] text-rose-accent mt-1 font-semibold">Fabric & Silk</p>
             </Link>
           </div>
 
-          {/* Right Icons */}
+          {/* Right Icons (Giữ nguyên) */}
           <div className="flex justify-end items-center gap-3 md:gap-5">
             <button 
                 onClick={() => setIsSearchOpen(true)}
@@ -113,9 +113,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* --- UI OVERLAYS --- */}
-
-      {/* 0. Mobile Menu Drawer */}
+      {/* Mobile Menu Drawer (Đã sửa lỗi) */}
       <div 
          className={`fixed inset-0 z-[200] bg-lavender-blush transition-transform duration-500 ease-in-out md:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
@@ -127,13 +125,10 @@ const Navbar = () => {
           </div>
           <div className="flex-1 flex flex-col p-8 gap-6 overflow-y-auto">
              <div className="space-y-6">
-                 {/* --- THAY ĐỔI Ở ĐÂY (MOBILE) --- */}
-                 <Link href="/products" legacyBehavior>
-                    <a onClick={() => setIsMobileMenuOpen(false)} className="w-full text-left flex items-center justify-between group">
-                        <span className="text-3xl font-serif text-charcoal group-hover:text-deep-rose transition-colors">Sản phẩm</span>
-                        <ArrowRight size={20} className="text-rose-300 group-hover:text-deep-rose -translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
-                    </a>
-                 </Link>
+                 <button onClick={() => scrollToSection('products')} className="w-full text-left flex items-center justify-between group">
+                    <span className="text-3xl font-serif text-charcoal group-hover:text-deep-rose transition-colors">Sản phẩm</span>
+                     <ArrowRight size={20} className="text-rose-300 group-hover:text-deep-rose -translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
+                 </button>
                  <button onClick={() => scrollToSection('features')} className="w-full text-left flex items-center justify-between group">
                     <span className="text-3xl font-serif text-charcoal group-hover:text-deep-rose transition-colors">Tính năng</span>
                      <ArrowRight size={20} className="text-rose-300 group-hover:text-deep-rose -translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all" />
@@ -151,8 +146,9 @@ const Navbar = () => {
              </div>
           </div>
       </div>
-      {/* Phần còn lại của component giữ nguyên... */}
-      <div className={`fixed inset-0 z-[160] bg-lavender-blush/95 backdrop-blur-xl transition-all duration-500 flex flex-col items-center pt-32 ${isSearchOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+
+      {/* Các Overlay khác giữ nguyên */}
+       <div className={`fixed inset-0 z-[160] bg-lavender-blush/95 backdrop-blur-xl transition-all duration-500 flex flex-col items-center pt-32 ${isSearchOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
          <button 
             onClick={() => setIsSearchOpen(false)}
             className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center text-deep-rose hover:bg-white rounded-full transition-all"

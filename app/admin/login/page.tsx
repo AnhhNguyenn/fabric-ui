@@ -1,3 +1,4 @@
+
 // app/admin/login/page.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
@@ -5,12 +6,22 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../src/context/AuthContext'; 
 import { Lock, Mail, LogIn, Loader2 } from 'lucide-react'; 
 
+// Hàm để set cookie, sử dụng ở client-side
+const setCookie = (name: string, value: string, days: number) => {
+  let expires = "";
+  if (days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days*24*60*60*1000));
+    expires = "; expires=" + date.toUTCString();
+  }
+  document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  // VẪN SỬ DỤNG: Để kiểm tra phiên hiện tại, nhưng không dùng hàm login()
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
@@ -25,24 +36,24 @@ export default function AdminLoginPage() {
     setError('');
     setLoading(true);
     
-    // --- THAY ĐỔI LOGIC --- 
-    // Bỏ qua việc gọi API, mô phỏng đăng nhập thành công
-    console.log("Đang ở môi trường local, bỏ qua xác thực, chuyển hướng tới /admin");
+    console.log("Đăng nhập giả lập. Đang tạo auth_token và chuyển hướng...");
     
-    // Giả lập một chút độ trễ cho cảm giác thật hơn
+    // Giả lập một chút độ trễ
     setTimeout(() => {
-        // Trong AuthContext, `isAuthenticated` sẽ không được set, 
-        // nhưng ta có thể điều hướng trực tiếp.
-        // Để có trải nghiệm đầy đủ hơn, ta có thể lưu một cờ vào localStorage.
-        localStorage.setItem('isLoggedIn', 'true');
+        // --- SỬA LỖI --- 
+        // Tạo một cookie giả tên là 'auth_token' để middleware có thể xác thực.
+        // Điều này kết nối logic đăng nhập giả lập với middleware bảo vệ.
+        setCookie('auth_token', 'fake-token-for-local-dev', 1);
+
+        // Chuyển hướng đến trang quản trị
         router.push('/admin'); 
+        router.refresh(); // Tải lại trang để đảm bảo middleware đọc được cookie mới
     }, 500);
   };
 
   return (
     <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-rose-200/70 p-8 md:p-12 space-y-10 border border-rose-50">
       
-      {/* Header Logo */}
       <div className="text-center">
          <h1 className="font-serif text-5xl font-extrabold text-deep-rose tracking-tighter">RiCa</h1>
          <p className="text-xs uppercase tracking-[0.4em] text-rose-accent mt-2 font-semibold">CMS Đăng nhập</p>
@@ -50,7 +61,6 @@ export default function AdminLoginPage() {
 
       <form className="space-y-6" onSubmit={handleSubmit}>
         
-        {/* Email Field */}
         <div className="relative">
             <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-400" />
             <input
@@ -66,7 +76,6 @@ export default function AdminLoginPage() {
             />
         </div>
         
-        {/* Password Field */}
         <div className="relative">
             <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-400" />
             <input
@@ -91,7 +100,7 @@ export default function AdminLoginPage() {
             className="w-full flex justify-center py-3.5 px-4 text-lg font-extrabold uppercase tracking-widest rounded-xl text-white bg-deep-rose hover:bg-rose-700 transition-all shadow-lg shadow-rose-300/70 disabled:opacity-50 gap-3"
           >
             {loading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <LogIn size={20} />}
-            {loading ? 'Đang xử lý...' : 'ĐĂNG NHẬP (GIẢ LẬP)'}
+            {loading ? 'Đang xử lý...' : 'ĐĂNG NHẬP'}
           </button>
         </div>
       </form>
