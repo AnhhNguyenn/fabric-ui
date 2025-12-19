@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { Product, Category } from '../types';
+import { Product } from '../types'; // ĐÃ XÓA Category bị thừa gây lỗi build
 import { X, ShoppingCart, Check } from 'lucide-react';
 
 interface ProductDetailModalProps {
@@ -14,14 +14,14 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, isOpen
 
   const imageUrl = product.image || product.images?.[0] || 'https://via.placeholder.com/600x800?text=No+Image';
 
-  // FIX TRIỆT ĐỂ: Ép kiểu sang 'any' tạm thời để vượt qua kiểm tra 'never' của TS khi build
+  // Dùng any để xử lý linh hoạt category là chuỗi hoặc object mà không bị lỗi 'never'
   const categoryData = product.category as any;
   const categoryName = categoryData 
     ? (typeof categoryData === 'object' ? categoryData.name : String(categoryData))
     : 'Thời trang';
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm text-left">
       <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-3xl shadow-2xl relative flex flex-col md:flex-row">
         {/* Nút đóng */}
         <button 
@@ -41,31 +41,30 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, isOpen
         </div>
 
         {/* Nội dung bên phải */}
-        <div className="md:w-1/2 p-8 overflow-y-auto text-left">
+        <div className="md:w-1/2 p-8 overflow-y-auto">
           <div className="mb-6">
-            <span className="text-rose-500 font-bold uppercase tracking-widest text-xs mb-2 block">
+            <span className="text-rose-500 font-bold uppercase tracking-widest text-xs mb-2 block text-left">
               {categoryName}
             </span>
-            <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">{product.name}</h2>
-            <p className="text-2xl font-bold text-rose-600">{product.price}</p>
+            <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3 text-left">{product.name}</h2>
+            <p className="text-2xl font-bold text-rose-600 text-left">{product.price}</p>
           </div>
 
           <div className="mb-8">
-            <h3 className="text-sm font-bold uppercase text-gray-400 tracking-wider mb-3">Mô tả thiết kế</h3>
-            <p className="text-gray-600 leading-relaxed">
+            <h3 className="text-sm font-bold uppercase text-gray-400 tracking-wider mb-3 text-left">Mô tả thiết kế</h3>
+            <p className="text-gray-600 leading-relaxed text-left">
               {product.description || "Mẫu thiết kế độc quyền mang phong cách hiện đại kết hợp truyền thống."}
             </p>
           </div>
 
-          {/* Render tính năng hardcode */}
           {product.features && product.features.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-sm font-bold uppercase text-gray-400 tracking-wider mb-3">Đặc điểm nổi bật</h3>
+              <h3 className="text-sm font-bold uppercase text-gray-400 tracking-wider mb-3 text-left">Đặc điểm nổi bật</h3>
               <ul className="space-y-2">
                 {product.features.map((feature, index) => (
-                  <li key={index} className="flex items-center text-gray-600 text-sm">
-                    <Check className="w-4 h-4 text-green-500 mr-2" />
-                    {feature}
+                  <li key={index} className="flex items-center text-gray-600 text-sm justify-start">
+                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                    <span>{feature}</span>
                   </li>
                 ))}
               </ul>
