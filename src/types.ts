@@ -1,10 +1,10 @@
-// src/types.ts
+import { ReactNode } from 'react';
 
 export interface Feature {
   id: number;
   title: string;
   description: string;
-  icon: any;
+  icon: ReactNode;
 }
 
 export interface ColorSwatch {
@@ -17,22 +17,19 @@ export interface Category {
   _id: string | number;
   name: string;
   slug?: string;
-  description?: string;
   image?: string;
   productCount?: number;
 }
 
 export interface Product {
   _id: string | number;
+  slug: string; // Thêm slug bắt buộc để làm URL đẹp
   name: string;
-  // Quan trọng: Chấp nhận cả số (cũ) và chuỗi (mới) để không vỡ giao diện
-  price: number | string; 
+  price: string | number; 
   description?: string;
-  images?: string[];
   image?: string;
-  category?: string | Category; 
-  type?: string;
+  images?: string[];
+  category?: string;
   tag?: string;
   features?: string[];
-  createdAt?: string;
 }
