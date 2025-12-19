@@ -1,79 +1,35 @@
-// src/components/ProductGrid.tsx
-'use client'; 
-import React, { useState, useEffect } from 'react';
-import { productApi } from '../utils/api'; 
-import { Product, Category } from '../types';
-import ProductCard from './ProductCard'; 
+'use client';
+import React from 'react';
+import ProductCard from './ProductCard';
+import { PRODUCTS } from '../constants'; // Lấy dữ liệu cứng ở đây
 
-export default function ProductGrid() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const data = await productApi.getAll(); 
-        setProducts(data);
-      } catch (err) {
-        console.error("Failed to fetch products:", err);
-        setError("Không thể tải sản phẩm. Vui lòng kiểm tra kết nối API.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
-
-  if (loading) {
-    return (
-      <section className="py-20 bg-gray-50 text-center">
-        <p className="text-xl text-gray-600">Đang tải sản phẩm...</p>
-      </section>
-    );
-  }
-
-  if (error) {
-    return (
-      <section className="py-20 bg-gray-50 text-center">
-        <p className="text-xl text-red-500">Lỗi: {error}</p>
-      </section>
-    );
-  }
-
+const ProductGrid = () => {
+  // Không dùng useState hay useEffect gọi API nữa
+  // Dùng trực tiếp biến PRODUCTS từ file constants
+  
   return (
-    <section className="py-20 bg-gray-50">
-      <div className="container mx-auto px-6">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">Bộ Sưu Tập Vải</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {products.map(product => {
-            const categoryName = typeof product.category === 'object' 
-                ? (product.category as Category).name 
-                : 'Khác';
-            
-            // Ánh xạ data API sang props component ProductCard cũ
-            const productForCard = {
-                ...product,
-                id: product._id as any, 
-                type: categoryName as any, 
-                price: product.price.toLocaleString('vi-VN') + 'đ/m', 
-                image: product.imageUrls[0] || 'https://via.placeholder.com/600x800?text=No+Image', 
-            };
-
-            return (
-                <ProductCard 
-                    key={productForCard.id} 
-                    product={productForCard as any}
-                />
-            );
-          })}
+    <section className="py-20 bg-white">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold font-serif text-gray-900 mb-4">
+              Thiết Kế Nổi Bật
+            </h2>
+            <div className="h-1 w-20 bg-rose-500 rounded-full"></div>
+          </div>
+          <p className="text-gray-500 max-w-md md:text-right">
+            Khám phá những mẫu trang phục tinh tế, kết hợp giữa nghệ thuật truyền thống và xu hướng hiện đại.
+          </p>
         </div>
-        
-        {products.length === 0 && (
-          <p className="text-center text-gray-500">Khách yêu hãy đợi và cập nhập thường xuyên nhé.</p>
-        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {PRODUCTS.map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))}
+        </div>
       </div>
     </section>
   );
-}
+};
+
+export default ProductGrid;
