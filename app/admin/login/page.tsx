@@ -10,10 +10,10 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  // VẪN SỬ DỤNG: Để kiểm tra phiên hiện tại, nhưng không dùng hàm login()
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
 
-  // GIỮ NGUYÊN: Chuyển hướng nếu đã có phiên (ví dụ: refresh trang)
   useEffect(() => {
     if (isAuthenticated) {
       router.push('/admin'); 
@@ -24,19 +24,19 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    try {
-      await login(email, password);
-      
-      // FIX CHUYỂN HƯỚNG: Chuyển hướng ngay lập tức sau khi login thành công
-      router.push('/admin'); 
-
-    } catch (err: any) { 
-      // FIX LỖI: Bắt lỗi chi tiết được ném từ AuthContext
-      const errorMessage = err.message || "Đăng nhập thất bại. Vui lòng kiểm tra email và mật khẩu.";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    
+    // --- THAY ĐỔI LOGIC --- 
+    // Bỏ qua việc gọi API, mô phỏng đăng nhập thành công
+    console.log("Đang ở môi trường local, bỏ qua xác thực, chuyển hướng tới /admin");
+    
+    // Giả lập một chút độ trễ cho cảm giác thật hơn
+    setTimeout(() => {
+        // Trong AuthContext, `isAuthenticated` sẽ không được set, 
+        // nhưng ta có thể điều hướng trực tiếp.
+        // Để có trải nghiệm đầy đủ hơn, ta có thể lưu một cờ vào localStorage.
+        localStorage.setItem('isLoggedIn', 'true');
+        router.push('/admin'); 
+    }, 500);
   };
 
   return (
@@ -91,7 +91,7 @@ export default function AdminLoginPage() {
             className="w-full flex justify-center py-3.5 px-4 text-lg font-extrabold uppercase tracking-widest rounded-xl text-white bg-deep-rose hover:bg-rose-700 transition-all shadow-lg shadow-rose-300/70 disabled:opacity-50 gap-3"
           >
             {loading ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <LogIn size={20} />}
-            {loading ? 'Đang xác thực...' : 'ĐĂNG NHẬP'}
+            {loading ? 'Đang xử lý...' : 'ĐĂNG NHẬP (GIẢ LẬP)'}
           </button>
         </div>
       </form>

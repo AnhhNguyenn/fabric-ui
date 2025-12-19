@@ -1,242 +1,136 @@
+
 // app/admin/products/[id]/page.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
-import { productApi, categoryApi } from '../../../../src/utils/api';
-import { Category } from '../../../../src/types';
-import { Save, Image, Tag, Loader2, X } from 'lucide-react';
+// Thay đổi: Nhập từ dữ liệu hardcode
+import { getProductById } from '../../../../src/data/products';
+import { Category, Product } from '../../../../src/types';
+import { Loader2, ArrowLeft, Tag, FileText, ImageIcon, Edit } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 
-export default function EditProductPage() {
+export default function ViewProductPage() {
     const router = useRouter();
     const params = useParams();
     const productId = params.id as string;
 
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [categoryLoading, setCategoryLoading] = useState(true);
-    const [loading, setLoading] = useState(false);
-    const [initialLoading, setInitialLoading] = useState(true);
+    const [product, setProduct] = useState<Product | null>(null);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [fileList, setFileList] = useState<FileList | null>(null);
-
-    // Form data
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [price, setPrice] = useState<number | ''>('');
-    const [categoryId, setCategoryId] = useState('');
-    const [tag, setTag] = useState('');
-    const [seoTitle, setSeoTitle] = useState('');
-    const [seoDescription, setSeoDescription] = useState('');
-    const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]); // Lưu trữ ảnh cũ
-
-    // Fetch initial data (Product and Categories)
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchProduct = async () => {
             if (!productId) return;
-
             try {
-                // 1. Fetch Product Details (API 4.4)
-                const product = await productApi.getById(productId);
-                
-                // Set form state with fetched data
-                setName(product.name);
-                setDescription(product.description);
-                setPrice(product.price);
-                setTag(product.tag || '');
-                setExistingImageUrls(product.imageUrls || []);
-                setSeoTitle(product.seo?.title || '');
-                setSeoDescription(product.seo?.description || '');
-                
-                // 2. Fetch Categories (API 3.1)
-                const cats = await categoryApi.getAll();
-                setCategories(cats);
-
-                // Set selected category ID
-                const currentCatId = typeof product.category === 'object' ? product.category._id : product.category;
-                setCategoryId(currentCatId || (cats.length > 0 ? cats[0]._id : ''));
-
+                const data = await getProductById(productId);
+                if (data) {
+                    setProduct(data);
+                } else {
+                    setError("Không tìm thấy sản phẩm với ID này trong tệp dữ liệu.");
+                }
             } catch (err) {
-                console.error("Lỗi tải dữ liệu sản phẩm:", err);
-                setError("Không thể tải dữ liệu sản phẩm để chỉnh sửa.");
+                setError("Lỗi tải dữ liệu sản phẩm.");
             } finally {
-                setInitialLoading(false);
-                setCategoryLoading(false);
+                setLoading(false);
             }
         };
-        fetchData();
+        fetchProduct();
     }, [productId]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            setFileList(e.target.files);
-        }
-    };
-    
-    const handleRemoveExistingImage = (urlToRemove: string) => {
-        setExistingImageUrls(prev => prev.filter(url => url !== urlToRemove));
-    };
-
-    // Handle update submission (API 4.3: PATCH /products/:id)
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        
-        if (!name || !price || !categoryId) {
-            setError('Vui lòng điền đầy đủ Tên, Giá và Danh mục.');
-            return;
-        }
-
-        setLoading(true);
-
-        const formData = new FormData();
-        // Chỉ gửi những trường có thể thay đổi
-        formData.append('name', name);
-        formData.append('description', description);
-        formData.append('price', price.toString());
-        formData.append('category', categoryId);
-        formData.append('tag', tag);
-        
-        // Gửi danh sách ảnh cũ còn lại (để API biết những ảnh nào không bị xóa)
-        formData.append('imageUrls', JSON.stringify(existingImageUrls)); 
-
-        // SEO data
-        formData.append('seo[title]', seoTitle);
-        formData.append('seo[description]', seoDescription);
-        formData.append('seo[keywords]', ''); 
-
-        // Append NEW files if selected
-        if (fileList) {
-            for (let i = 0; i < fileList.length; i++) {
-                formData.append('files', fileList[i]);
-            }
-        }
-
-        try {
-            await productApi.update(productId, formData);
-            alert('Cập nhật sản phẩm thành công!');
-            router.push('/admin/products');
-        } catch (err) {
-            console.error("Lỗi cập nhật sản phẩm:", err);
-            setError('Cập nhật sản phẩm thất bại. Vui lòng kiểm tra console hoặc API.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (initialLoading) {
+    if (loading) {
         return (
             <div className="text-center p-20 flex flex-col items-center">
                 <Loader2 className="w-8 h-8 animate-spin text-rose-500 mb-4" />
-                <p>Đang tải dữ liệu sản phẩm...</p>
+                <p>Đang tải chi tiết sản phẩm...</p>
             </div>
         );
     }
     
-    if (error) {
-        return <p className="text-red-500 text-lg p-4">Lỗi: {error}</p>;
+    if (error || !product) {
+        return <p className="text-red-500 text-lg p-4 bg-red-50 rounded-xl">Lỗi: {error || 'Không thể hiển thị sản phẩm.'}</p>;
     }
 
+    const getCategoryName = (category: string | Category): string => {
+        if (typeof category === 'string') {
+            return category;
+        }
+        return category.name;
+    };
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-800">Chỉnh sửa Sản phẩm: {name}</h1>
-            {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">{error}</div>}
-            
-            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md space-y-6">
-                
-                {/* THÔNG TIN CƠ BẢN */}
-                <h2 className="text-xl font-semibold text-rose-500 border-b pb-2">Thông tin Cơ bản</h2>
-                <input 
-                    type="text" placeholder="Tên Sản phẩm" required
-                    value={name} onChange={(e) => setName(e.target.value)}
-                    className="w-full p-2 border rounded"
-                />
-                <textarea 
-                    placeholder="Mô tả chi tiết" rows={4}
-                    value={description} onChange={(e) => setDescription(e.target.value)}
-                    className="w-full p-2 border rounded"
-                />
-                <div className="grid grid-cols-2 gap-4">
-                    <input 
-                        type="number" placeholder="Giá (VND/mét)" required min="1000"
-                        value={price} onChange={(e) => setPrice(Number(e.target.value))}
-                        className="w-full p-2 border rounded"
-                    />
-                    <select 
-                        required
-                        value={categoryId} onChange={(e) => setCategoryId(e.target.value)}
-                        className="w-full p-2 border rounded disabled:bg-gray-100"
-                        disabled={categoryLoading || categories.length === 0}
-                    >
-                        {categoryLoading && <option>Đang tải danh mục...</option>}
-                        {categories.length === 0 && !categoryLoading && <option value="">Vui lòng tạo danh mục trước</option>}
-                        {categories.map(cat => (
-                            <option key={cat._id} value={cat._id}>{cat.name}</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="flex items-center space-x-2 text-gray-500">
-                    <Tag className="w-4 h-4" />
-                    <input 
-                        type="text" placeholder="Tag (VD: Best Seller, New)"
-                        value={tag} onChange={(e) => setTag(e.target.value)}
-                        className="w-full p-2 border rounded"
-                    />
-                </div>
-                
-
-                {/* HÌNH ẢNH HIỆN TẠI */}
-                <h2 className="text-xl font-semibold text-rose-500 border-b pb-2 pt-4">Hình ảnh Hiện tại</h2>
-                <div className="flex flex-wrap gap-4">
-                    {existingImageUrls.map(url => (
-                        <div key={url} className="relative w-32 h-32 border rounded-lg shadow-sm">
-                            <img src={url} alt="Existing product" className="w-full h-full object-cover rounded-lg" />
-                            <button 
-                                type="button"
-                                onClick={() => handleRemoveExistingImage(url)}
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-700 transition"
-                            >
-                                <X className="w-3 h-3" />
-                            </button>
-                        </div>
-                    ))}
-                    {existingImageUrls.length === 0 && <p className="text-gray-500 italic">Không có ảnh nào được lưu.</p>}
-                </div>
-                
-                {/* UPLOAD HÌNH ẢNH MỚI */}
-                <h2 className="text-xl font-semibold text-rose-500 border-b pb-2 pt-4">Upload Hình ảnh mới (Sẽ được thêm vào)</h2>
-                <div className="flex items-center space-x-2 text-gray-500">
-                    <Image className="w-4 h-4" />
-                    <input 
-                        type="file" multiple 
-                        onChange={handleFileChange}
-                        className="w-full p-2 border rounded bg-gray-50"
-                    />
-                </div>
-                <p className="text-sm text-gray-500 ml-6">{fileList ? `${fileList.length} files đã chọn để upload.` : 'Chọn ảnh mới để thêm.'}</p>
-
-
-                {/* SEO */}
-                <h2 className="text-xl font-semibold text-rose-500 border-b pb-2 pt-4">Tối ưu SEO</h2>
-                <input 
-                    type="text" placeholder="SEO Title"
-                    value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)}
-                    className="w-full p-2 border rounded"
-                />
-                <textarea 
-                    placeholder="SEO Description" rows={2}
-                    value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)}
-                    className="w-full p-2 border rounded"
-                />
-
-                <button
-                    type="submit"
-                    disabled={loading || categoryLoading}
-                    className="bg-rose-600 text-white px-6 py-3 rounded-lg flex items-center justify-center disabled:opacity-50 hover:bg-rose-700 transition"
-                >
-                    <Save className="w-5 h-5 mr-2" /> {loading ? 'Đang cập nhật...' : 'Lưu Thay Đổi'}
+        <div className="space-y-8 max-w-4xl mx-auto">
+            <div className="flex items-center gap-4">
+                <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-gray-100">
+                    <ArrowLeft className="w-6 h-6 text-gray-700" />
                 </button>
-            </form>
+                <h1 className="text-3xl font-bold text-gray-800 font-serif">Chi tiết Sản phẩm (Chỉ xem)</h1>
+            </div>
+
+             <div className="p-6 bg-amber-50 border-2 border-dashed border-amber-200 rounded-2xl text-amber-800">
+                <div className="flex items-start gap-4">
+                    <Edit className="w-6 h-6 text-amber-500 flex-shrink-0 mt-1" />
+                    <div>
+                        <h2 className="text-xl font-bold">Chế độ Chỉ xem</h2>
+                        <p className="mt-1 text-sm">
+                            Đây là bản xem trước của dữ liệu sản phẩm. Để chỉnh sửa, hãy mở tệp 
+                            <code className="bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded-md text-xs mx-1 font-mono">src/data/products.ts</code> 
+                            và tìm sản phẩm với ID <code className='font-mono bg-amber-100 px-1.5 py-0.5 rounded-md'>{product._id}</code>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100 space-y-6">
+                
+                <div className="flex flex-col md:flex-row gap-8">
+                    {/* Cột ảnh */}
+                    <div className="md:w-1/3">
+                        <h3 className="text-lg font-semibold text-gray-500 mb-3 flex items-center"><ImageIcon className='w-5 h-5 mr-2'/>Hình ảnh</h3>
+                        <div className="space-y-3">
+                            {product.imageUrls && product.imageUrls.length > 0 ? (
+                                product.imageUrls.map((url, index) => (
+                                    <div key={index} className='relative group'>
+                                        <img src={url} alt={`${product.name} - ảnh ${index + 1}`} className="w-full h-auto object-cover rounded-xl shadow-md" />
+                                        <div className='absolute bottom-1 right-1 text-xs bg-black/50 text-white px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity'>
+                                           {url}
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-gray-500 italic">Không có hình ảnh.</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Cột thông tin */}
+                    <div className="md:w-2/3 space-y-4">
+                        <h2 className='text-4xl font-bold text-rose-800 font-serif tracking-tight'>{product.name}</h2>
+
+                        <div>
+                             <p className="text-4xl font-light text-green-600">
+                                {product.price.toLocaleString('vi-VN')} <span className='text-2xl'>đ/m</span>
+                            </p>
+                        </div>
+
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-500 mb-2 flex items-center"><FileText className='w-5 h-5 mr-2'/>Mô tả</h3>
+                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{product.description || <span className='italic text-gray-400'>Không có mô tả.</span>}</p>
+                        </div>
+
+                         <div>
+                            <h3 className="text-lg font-semibold text-gray-500 mb-2 flex items-center"><Tag className='w-5 h-5 mr-2'/>Thông tin khác</h3>
+                            <div className='grid grid-cols-2 gap-x-4 gap-y-2 text-sm'>
+                                <strong className='text-gray-500'>ID:</strong> <code className='text-purple-700'>{product._id}</code>
+                                <strong className='text-gray-500'>Danh mục:</strong> 
+                                <span className='font-medium text-gray-800'>{getCategoryName(product.category)}</span>
+                                {/* SỬA LỖI: Hiển thị lại tags là mảng */}
+                                <strong className='text-gray-500'>Tags:</strong> <span className='font-medium text-gray-800'>{product.tags?.join(', ') || 'Không có'}</span>
+                                {/* SỬA LỖI: Hiển thị stock */}
+                                <strong className='text-gray-500'>Tồn kho:</strong> <span className='font-medium text-gray-800'>{product.stock !== undefined ? `${product.stock} mét` : 'Chưa rõ'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

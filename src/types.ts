@@ -1,3 +1,4 @@
+
 // src/types.ts
 
 import React from 'react';
@@ -13,33 +14,27 @@ export interface OpenGraph {
 
 // CẬP NHẬT: Định nghĩa cho SEO
 export interface Seo {
-  // Các trường cũ (cần đổi tên/bổ sung để khớp với code page.tsx)
-  metaTitle?: string; // Tên đã được sử dụng trong page.tsx
-  metaDescription?: string; // Tên đã được sử dụng trong page.tsx
-  title?: string; // Có thể giữ lại nếu API trả về (backup cho metaTitle)
-  description?: string; // Có thể giữ lại nếu API trả về (backup cho metaDescription)
-  keywords?: string; // Đã có
-  
-  // Các trường mới được sử dụng trong page.tsx
+  metaTitle?: string; 
+  metaDescription?: string; 
+  title?: string; 
+  description?: string; 
+  keywords?: string; 
   slug?: string;
   canonicalUrl?: string;
-  
-  // Trường Open Graph
   openGraph?: OpenGraph;
 }
 
 // CẬP NHẬT: Định nghĩa cho Category
-// Lỗi chính là thiếu trường 'seo' trong Category
 export interface Category {
   _id: string; 
   name: string;
   description: string;
-  // Bổ sung trường SEO
   seo?: Seo; 
-  createdAt?: string; // Nên thêm nếu có
-  updatedAt?: string; // Nên thêm nếu có
+  createdAt?: string; 
+  updatedAt?: string; 
 }
 
+// CẬP NHẬT: Định nghĩa cho Product để khớp với dữ liệu hardcode
 export interface Product {
   _id: string;
   name: string;
@@ -47,8 +42,11 @@ export interface Product {
   price: number; 
   category: string | Category; 
   imageUrls: string[]; 
-  seo?: Seo; // Trường này đã có
-  tag?: string; 
+  seo?: Seo;
+  // Sửa lỗi: Đổi 'tag' thành 'tags' và kiểu dữ liệu thành mảng chuỗi
+  tags?: string[]; 
+  // Sửa lỗi: Thêm thuộc tính 'stock'
+  stock?: number; 
   createdAt?: string;
   updatedAt?: string;
 }
