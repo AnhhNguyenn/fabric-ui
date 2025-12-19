@@ -195,15 +195,18 @@
 //     </div>
 //   );
 // } 
+
+
 'use client';
 import React, { useState } from 'react';
-import { CATEGORIES } from '../../../../src/constants'; // Import dữ liệu cứng
+import { CATEGORIES } from '../../../../src/constants'; 
 import { Image, Info, DollarSign, Search } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function CreateProductPage() {
   const router = useRouter();
-  // Dùng trực tiếp CATEGORIES từ constants, không cần useEffect fetch API
+  
+  // Lấy dữ liệu cứng, không gọi API
   const [categories] = useState(CATEGORIES); 
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState<FileList | null>(null);
@@ -211,7 +214,10 @@ export default function CreateProductPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<number | ''>('');
+  
+  // Mặc định chọn category đầu tiên nếu có
   const [categoryId, setCategoryId] = useState(CATEGORIES[0]?._id.toString() || '');
+  
   const [metaTitle, setMetaTitle] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
@@ -227,7 +233,7 @@ export default function CreateProductPage() {
 
     setLoading(true);
     
-    // GIẢ LẬP ĐỘ TRỄ MẠNG (Simulate API call)
+    // GIẢ LẬP LƯU DỮ LIỆU (Demo Mode)
     setTimeout(() => {
       alert('THÀNH CÔNG (Chế độ Demo): Sản phẩm đã được lưu!');
       setLoading(false);
