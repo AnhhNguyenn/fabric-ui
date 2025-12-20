@@ -3,7 +3,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { IProduct } from '@/models/Product';
+import { IProduct } from '@/src/models/Product';
 import { Eye, Loader2, DollarSign, Database, PlusCircle } from 'lucide-react';
 
 export default function ProductManagementPage() {
@@ -80,7 +80,7 @@ export default function ProductManagementPage() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-100">
                             {products.map((product) => (
-                                <tr key={product._id as string} className="hover:bg-rose-50/50 transition-colors">
+                                <tr key={product._id.toString()} className="hover:bg-rose-50/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <img 
                                             src={product.images && product.images.length > 0 ? product.images[0].url : '/images/placeholder.png'} 
@@ -97,7 +97,7 @@ export default function ProductManagementPage() {
                                     </td>
                                     <td className="px-6 py-4 text-sm font-medium">
                                         <Link 
-                                            href={`/admin/products/${product._id}`}
+                                            href={`/admin/products/${product._id.toString()}`}
                                             className="text-gray-600 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50 transition flex items-center w-fit"
                                             title="Xem chi tiết"
                                         >

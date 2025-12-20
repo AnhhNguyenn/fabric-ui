@@ -1,7 +1,7 @@
 
 // app/api/upload/route.ts
 import { NextResponse } from 'next/server';
-import cloudinary from '@/lib/cloudinary';
+import cloudinary from '@/src/lib/cloudinary';
 import { Readable } from 'stream';
 
 // Hàm trợ giúp để chuyển ReadableStream thành Buffer

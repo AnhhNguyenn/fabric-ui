@@ -1,8 +1,8 @@
 
 // app/api/products/[id]/route.ts
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/dbConnect';
-import Product from '@/models/Product';
+import dbConnect from '@/src/lib/dbConnect';
+import Product from '@/src/models/Product';
 
 interface Params {
   params: { id: string };
@@ -11,7 +11,7 @@ interface Params {
 /**
  * Lấy thông tin chi tiết một sản phẩm theo ID
  */
-export async function GET(req: Request, { params }: Params) {
+export async function GET(_req: Request, { params }: Params) {
   const { id } = params;
   try {
     await dbConnect();
@@ -61,7 +61,7 @@ export async function PUT(req: Request, { params }: Params) {
 /**
  * Xóa một sản phẩm theo ID
  */
-export async function DELETE(req: Request, { params }: Params) {
+export async function DELETE(_req: Request, { params }: Params) {
   const { id } = params;
   try {
     await dbConnect();

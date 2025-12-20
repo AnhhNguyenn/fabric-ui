@@ -6,18 +6,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Save, Upload, Plus, X, ImageIcon, Palette, Ruler, Box, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { IProduct } from '@/models/Product'; // Sử dụng interface từ model
+import { IProduct } from '@/src/models/Product'; // Sử dụng interface từ model
 
 // --- Interfaces for state management ---
 interface Variant {
   color: string;
   size: string;
   stock: number;
-}
-
-interface ProductImage {
-  url: string;
-  alt: string;
 }
 
 const EditProductPage = () => {

@@ -6,6 +6,7 @@ import { Inter } from 'next/font/google';
 // === SỬA LỖI: IMPORT ĐÚNG TỆP TAILWIND CSS ===
 import '../src/index.css'; 
 
+import { AuthProvider } from '../src/context/AuthContext'; // Thêm AuthProvider
 import { CartProvider } from '../src/context/CartContext'; 
 import Footer from '../src/components/Footer';
 
@@ -24,10 +25,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <CartProvider>
-          {children}
-          <Footer />
-        </CartProvider>
+        <AuthProvider> // Bao bọc toàn bộ ứng dụng bằng AuthProvider
+          <CartProvider>
+            {children}
+            <Footer />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

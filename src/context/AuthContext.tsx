@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // --- SỬA LỖI: VIẾT LẠI HÀM LOGIN GIẢ LẬP ---
   // Hàm này không gọi API, chỉ tạo cookie và cập nhật trạng thái.
-  const login = async (email: string, password: string) => {
+  const login = async (_email: string, _password: string) => {
     return new Promise<void>((resolve) => {
       console.log("[AUTH LOG] Thực hiện đăng nhập giả lập.");
       // 1. Tạo cookie mà middleware cần

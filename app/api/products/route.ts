@@ -1,13 +1,13 @@
 
 // app/api/products/route.ts
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/dbConnect';
-import Product from '@/models/Product';
+import dbConnect from '@/src/lib/dbConnect';
+import Product from '@/src/models/Product';
 
 /**
  * Xử lý yêu cầu GET để lấy danh sách sản phẩm.
  */
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
   try {
     await dbConnect();
     const products = await Product.find({});

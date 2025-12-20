@@ -46,7 +46,7 @@ export interface Product {
   // Sửa lỗi: Đổi 'tag' thành 'tags' và kiểu dữ liệu thành mảng chuỗi
   tags?: string[]; 
   // Sửa lỗi: Thêm thuộc tính 'stock'
-  stock?: number; 
+  stock: number; 
   createdAt?: string;
   updatedAt?: string;
 }

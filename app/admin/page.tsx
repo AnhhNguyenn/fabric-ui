@@ -1,156 +1,187 @@
 
 // app/admin/page.tsx
-import { getProducts } from '../../src/data/products';
-import { getCategories } from '../../src/data/categories';
-import { Product, Category } from '../../src/types';
-import { 
-    LayoutDashboard, 
-    Package, 
-    Shapes, 
-    Wallet, 
-    AlertTriangle, 
-    ArrowRight 
-} from 'lucide-react';
+'use client';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Loader2, DollarSign, ShoppingCart, Package, Eye } from 'lucide-react';
+import { Types } from 'mongoose'; // Import Types for ObjectId
+import { subDays, format } from 'date-fns';
 
-// --- Thống kê --- //
-interface DashboardStats {
-    totalProducts: number;
-    totalCategories: number;
-    totalInventoryValue: number;
-    lowStockProductsCount: number;
-    lowStockThreshold: number;
+// --- TypeScript Interfaces ---
+// We need to define IOrder here to include the _id type
+interface IOrder {
+  _id: Types.ObjectId | string;
+  customerInfo: { name: string };
+  totalAmount: number;
+  status: string;
 }
 
-// --- Component Card Thống kê (ĐÃ SỬA LỖI) --- //
-// Thay vì dùng prop `colorClass`, ta truyền thẳng các class của Tailwind vào
-const StatCard = ({ title, value, icon: Icon, note, borderColor, bgColor, textColor }: any) => (
-    <div className={`bg-white p-6 rounded-2xl shadow-sm border ${borderColor}`}>
-        <div className="flex justify-between items-start mb-2">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">{title}</h3>
-            <div className={`${bgColor} p-2 rounded-lg`}>
-                <Icon className={textColor} size={24} />
-            </div>
-        </div>
-        <p className="text-3xl font-bold text-gray-800">{value}</p>
-        {note && <p className="text-xs text-gray-400 mt-1">{note}</p>}
+interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  newOrdersToday: number;
+  totalProducts: number;
+}
+
+interface ChartDataPoint {
+  _id: string; // date string "YYYY-MM-DD"
+  dailyRevenue: number;
+}
+
+interface TopViewedProduct {
+  _id: string | Types.ObjectId;
+  name: string;
+  image: string;
+  viewCount: number;
+}
+
+interface DashboardData {
+  stats: DashboardStats;
+  chartData: ChartDataPoint[];
+  recentOrders: IOrder[];
+  topViewedProducts: TopViewedProduct[];
+}
+
+// --- Helper Functions ---
+const formatCurrency = (value: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+
+// --- Components ---
+const StatCard = ({ title, value, icon, subtext }: { title: string, value: string, icon: React.ReactNode, subtext?: string }) => (
+  <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 flex justify-between items-center">
+    <div>
+      <p className="text-sm font-semibold text-gray-500">{title}</p>
+      <p className="text-3xl font-bold text-gray-800">{value}</p>
+      {subtext && <p className="text-xs text-gray-400 mt-1">{subtext}</p>}
     </div>
+    <div className="bg-rose-100/70 text-deep-rose p-4 rounded-full">{icon}</div>
+  </div>
 );
 
-// --- Component Cảnh báo Hàng tồn kho thấp --- //
-const LowStockWarning = ({ count, threshold, products }: { count: number, threshold: number, products: Product[] }) => {
-    if (count === 0) return null;
-    
-    return (
-        <div className="bg-yellow-50 border-2 border-yellow-300 p-6 rounded-2xl shadow-sm">
-            <div className="flex items-start">
-                <AlertTriangle className="text-yellow-500 mr-4 flex-shrink-0" size={28} />
-                <div>
-                    <h3 className="text-lg font-bold text-yellow-800">Cảnh báo tồn kho thấp</h3>
-                    <p className="text-yellow-700 mt-1">Có <span className="font-extrabold">{count}</span> sản phẩm có số lượng tồn kho dưới <span className="font-extrabold">{threshold}</span> mét.</p>
-                    <ul className="mt-3 list-disc list-inside text-sm text-yellow-700 font-semibold">
-                        {products.map(p => <li key={p._id}>{p.name} (còn {p.stock}m)</li>)}
-                    </ul>
-                </div>
-            </div>
-        </div>
-    );
+const OrderStatusBadge = ({ status }: { status: string }) => {
+  const statusStyles: { [key: string]: string } = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    processing: 'bg-blue-100 text-blue-800',
+    shipped: 'bg-indigo-100 text-indigo-800',
+    delivered: 'bg-green-100 text-green-800',
+    cancelled: 'bg-red-100 text-red-800',
+  };
+  return <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${statusStyles[status] || 'bg-gray-100'}`}>{status}</span>;
 };
 
-// --- Component Lối tắt --- //
-const QuickLink = ({ title, href, icon: Icon }: any) => (
-    <Link href={href}>
-        <div className="bg-white p-5 rounded-2xl shadow-sm border hover:border-rose-500 hover:shadow-md transition-all group">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                    <div className="bg-rose-100 p-3 rounded-lg mr-4">
-                       <Icon className="text-rose-600" size={20} />
-                    </div>
-                    <h4 className="font-bold text-gray-700 group-hover:text-rose-600">{title}</h4>
-                </div>
-                <ArrowRight className="text-gray-400 group-hover:text-rose-600 group-hover:translate-x-1 transition-transform" size={20}/>
-            </div>
-        </div>
-    </Link>
-)
+// --- Main Page Component ---
+const DashboardPage = () => {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-
-// --- Trang Dashboard Chính --- //
-export default async function AdminDashboardPage() {
-
-    const products = await getProducts();
-    const categories = await getCategories();
-
-    const LOW_STOCK_THRESHOLD = 100;
-
-    const totalInventoryValue = products.reduce((sum, p) => sum + p.price * p.stock, 0);
-    const lowStockProducts = products.filter(p => p.stock < LOW_STOCK_THRESHOLD);
-
-    const stats: DashboardStats = {
-        totalProducts: products.length,
-        totalCategories: categories.length,
-        totalInventoryValue,
-        lowStockProductsCount: lowStockProducts.length,
-        lowStockThreshold: LOW_STOCK_THRESHOLD,
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/dashboard');
+        if (!response.ok) throw new Error('Không thể tải dữ liệu tổng quan.');
+        const result = await response.json();
+        setData(result);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchData();
+  }, []);
 
-    return (
-        <div className="space-y-8">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-gray-800 flex items-center">
-                    <LayoutDashboard className="mr-3 text-rose-500" size={32}/>
-                    Dashboard
-                </h1>
-                <p className="text-sm text-gray-500">Chào mừng trở lại, Quản trị viên!</p>
-            </div>
+  const processChartData = (chartData: ChartDataPoint[]) => {
+      const last30Days = Array.from({ length: 30 }, (_, i) => format(subDays(new Date(), i), 'yyyy-MM-dd')).reverse();
+      return last30Days.map(day => {
+          const found = chartData.find(d => d._id === day);
+          return {
+              date: format(new Date(day), 'dd/MM'),
+              DoanhThu: found ? found.dailyRevenue : 0,
+          };
+      });
+  };
 
-            {/* Lưới Thống kê (ĐÃ SỬA LỖI) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <StatCard 
-                    title="Tổng Sản phẩm" 
-                    value={stats.totalProducts} 
-                    icon={Package}
-                    borderColor="border-blue-100"
-                    bgColor="bg-blue-100"
-                    textColor="text-blue-600"
-                />
-                <StatCard 
-                    title="Tổng Danh mục" 
-                    value={stats.totalCategories} 
-                    icon={Shapes}
-                    borderColor="border-purple-100"
-                    bgColor="bg-purple-100"
-                    textColor="text-purple-600"
-                />
-                <StatCard 
-                    title="Giá trị tồn kho" 
-                    value={new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.totalInventoryValue)} 
-                    icon={Wallet}
-                    borderColor="border-green-200"
-                    bgColor="bg-green-100"
-                    textColor="text-green-600"
-                    note={`Dựa trên ${stats.totalProducts} sản phẩm`}
-                />
-            </div>
+  if (loading) return <div className="flex items-center justify-center p-20 text-lg"><Loader2 className="w-6 h-6 animate-spin mr-2" /> Đang tải trang tổng quan...</div>;
+  if (error) return <p className="text-red-500 p-4 bg-red-50 rounded-lg">Lỗi: {error}</p>;
+  if (!data) return <p>Không có dữ liệu.</p>;
 
-            {/* Cảnh báo và Lối tắt */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-6">
-                    <h3 className="font-bold text-lg text-gray-600">Lối tắt</h3>
-                    <QuickLink title="Quản lý Sản phẩm" href="/admin/products" icon={Package}/>
-                    <QuickLink title="Quản lý Danh mục" href="/admin/categories" icon={Shapes}/>
+  const formattedChartData = processChartData(data.chartData);
+
+  return (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold text-gray-800 font-serif">Tổng quan</h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard title="Tổng Doanh thu" value={formatCurrency(data.stats.totalRevenue)} icon={<DollarSign />} subtext="(từ đơn hàng đã giao)"/>
+        <StatCard title="Tổng Đơn hàng" value={data.stats.totalOrders.toLocaleString()} icon={<ShoppingCart />} />
+        <StatCard title="Đơn hàng Mới" value={data.stats.newOrdersToday.toLocaleString()} icon={<ShoppingCart />} subtext="Hôm nay" />
+        <StatCard title="Sản phẩm" value={data.stats.totalProducts.toLocaleString()} icon={<Package />} />
+      </div>
+
+      <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Doanh thu 30 ngày gần nhất</h2>
+        <ResponsiveContainer width="100%" height={350}>
+          <BarChart data={formattedChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb"/>
+            <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
+            <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value: any) => typeof value === 'number' ? `${value / 1000000}Tr` : ''} />
+            <Tooltip 
+                contentStyle={{ backgroundColor: '#fff', border: '1px solid #ddd', borderRadius: '0.5rem'}} 
+                labelStyle={{ fontWeight: 'bold' }} 
+                formatter={(value: any) => typeof value === 'number' ? [formatCurrency(value), 'Doanh thu'] : [null, null]}
+            />
+            <Bar dataKey="DoanhThu" fill="#D12E5E" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Đơn hàng Gần đây</h2>
+          <div className="space-y-4">
+            {data.recentOrders.map(order => (
+              <div key={order._id.toString()} className="flex justify-between items-center border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                <div>
+                  <p className="font-semibold text-gray-800">{order.customerInfo.name}</p>
+                  <p className="text-sm text-gray-500">{formatCurrency(order.totalAmount)}</p>
                 </div>
-                <div className="space-y-6">
-                    <h3 className="font-bold text-lg text-gray-600">Thông báo quan trọng</h3>
-                     <LowStockWarning 
-                        count={stats.lowStockProductsCount} 
-                        threshold={stats.lowStockThreshold} 
-                        products={lowStockProducts}
-                    />
+                <div className="flex items-center gap-3">
+                  <OrderStatusBadge status={order.status} />
+                  <Link href={`/admin/orders/${order._id.toString()}`} className="text-gray-400 hover:text-deep-rose"><Eye size={18}/></Link>
                 </div>
-            </div>
-            {/* Khối <style> đã được xóa bỏ hoàn toàn */}
+              </div>
+            ))}
+          </div>
         </div>
-    );
-}
+
+        <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Sản phẩm được xem nhiều nhất</h2>
+            <div className="space-y-4">
+                {data.topViewedProducts && data.topViewedProducts.length > 0 ? data.topViewedProducts.map((product) => (
+                    <div key={product._id.toString()} className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <img src={product.image || 'https://via.placeholder.com/150'} alt={product.name} className="w-12 h-12 rounded-lg object-cover bg-gray-100"/>
+                            <div>
+                                <Link href={`/admin/products/${product._id.toString()}`} className="font-semibold text-gray-800 hover:text-deep-rose transition-colors line-clamp-1">
+                                    {product.name}
+                                </Link>
+                                <p className="text-sm text-gray-500">Lượt xem: {product.viewCount}</p>
+                            </div>
+                        </div>
+                        <Link href={`/products/${product._id.toString()}`} target="_blank" className="text-gray-400 hover:text-deep-rose" title="Xem trang sản phẩm">
+                            <Eye size={18}/>
+                        </Link>
+                    </div>
+                )) : (
+                    <p className="text-center py-8 text-gray-500 italic">Chưa có dữ liệu lượt xem sản phẩm.</p>
+                )}
+            </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardPage;
