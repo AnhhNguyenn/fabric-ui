@@ -2,53 +2,50 @@
 // app/admin/login/page.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // Import useSearchParams
 import { useAuth } from '../../../src/context/AuthContext'; 
 import { Lock, Mail, LogIn, Loader2 } from 'lucide-react'; 
-
-// Hàm để set cookie, sử dụng ở client-side
-const setCookie = (name: string, value: string, days: number) => {
-  let expires = "";
-  if (days) {
-    const date = new Date();
-    date.setTime(date.getTime() + (days*24*60*60*1000));
-    expires = "; expires=" + date.toUTCString();
-  }
-  document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-}
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { isAuthenticated } = useAuth();
+  
+  // --- SỬA LỖI: SỬ DỤNG HOOK useAuth ĐỂ TRUY CẬP CONTEXT ---
+  const { isAuthenticated, login } = useAuth(); 
   const router = useRouter();
+  const searchParams = useSearchParams(); // Hook để lấy query params
 
+  // Lấy đường dẫn mà người dùng muốn truy cập trước khi bị chuyển hướng đến trang login
+  const nextUrl = searchParams.get('next') || '/admin';
+
+  // Nếu đã đăng nhập, tự động chuyển hướng
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/admin'); 
+      router.push(nextUrl); 
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, nextUrl]);
 
+  // --- SỬA LỖI: KẾT NỐI VỚI AUTHCONTEXT ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     
-    console.log("Đăng nhập giả lập. Đang tạo auth_token và chuyển hướng...");
-    
-    // Giả lập một chút độ trễ
-    setTimeout(() => {
-        // --- SỬA LỖI --- 
-        // Tạo một cookie giả tên là 'auth_token' để middleware có thể xác thực.
-        // Điều này kết nối logic đăng nhập giả lập với middleware bảo vệ.
-        setCookie('auth_token', 'fake-token-for-local-dev', 1);
-
-        // Chuyển hướng đến trang quản trị
-        router.push('/admin'); 
-        router.refresh(); // Tải lại trang để đảm bảo middleware đọc được cookie mới
-    }, 500);
+    try {
+      // Gọi hàm login từ AuthContext
+      await login(email, password);
+      console.log("Đăng nhập thành công, đang chuyển hướng...");
+      // Chuyển hướng đến trang admin hoặc trang được yêu cầu trước đó
+      router.push(nextUrl);
+      // router.refresh(); // Không cần thiết vì context đã xử lý state
+    } catch (err: any) {
+      console.error("Lỗi đăng nhập giả lập:", err);
+      // Hiển thị lỗi nếu có (dù trong trường hợp giả lập, nó sẽ không bao giờ lỗi)
+      setError(err.message || "Có lỗi xảy ra");
+      setLoading(false);
+    }
   };
 
   return (

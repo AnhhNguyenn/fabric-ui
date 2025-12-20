@@ -2,14 +2,12 @@
 // app/admin/products/page.tsx
 'use client';
 import React, { useState, useEffect } from 'react';
-// Thay đổi: Nhập từ dữ liệu hardcode
-import { getProducts } from '../../../src/data/products';
-import { Product } from '../../../src/types';
 import Link from 'next/link';
-import { Eye, Loader2, DollarSign, FileCode } from 'lucide-react'; 
+import { IProduct } from '@/models/Product';
+import { Eye, Loader2, DollarSign, Database, PlusCircle } from 'lucide-react';
 
 export default function ProductManagementPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,11 +15,15 @@ export default function ProductManagementPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        // Thay đổi: Gọi hàm getProducts từ tệp dữ liệu
-        const data = await getProducts();
+        const response = await fetch('/api/products');
+        if (!response.ok) {
+          throw new Error(`Lỗi API: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
         setProducts(data);
-      } catch (err) {
-        setError("Không thể tải sản phẩm. Đã xảy ra lỗi khi đọc tệp `src/data/products.ts`.");
+      } catch (err: any) {
+        console.error(err);
+        setError("Không thể tải sản phẩm từ cơ sở dữ liệu. Vui lòng kiểm tra kết nối API.");
       } finally {
         setLoading(false);
       }
@@ -31,25 +33,20 @@ export default function ProductManagementPage() {
 
   if (loading) return (
       <div className="flex items-center justify-center p-20 text-lg text-gray-600">
-          <Loader2 className="w-6 h-6 animate-spin mr-2" /> Đang tải dữ liệu...
+          <Loader2 className="w-6 h-6 animate-spin mr-2" /> Đang tải dữ liệu từ MongoDB...
       </div>
   );
   if (error) return <p className="text-red-500 text-lg p-4 bg-red-50 border border-red-200 rounded-xl">Lỗi: {error}</p>;
 
   return (
     <div className="space-y-8">
-        <div className="p-6 bg-blue-50 border-2 border-dashed border-blue-200 rounded-2xl text-blue-800">
+        <div className="p-6 bg-green-50 border-2 border-dashed border-green-200 rounded-2xl text-green-800">
             <div className="flex items-start gap-4">
-                <FileCode className="w-8 h-8 text-blue-500 flex-shrink-0 mt-1" />
+                <Database className="w-8 h-8 text-green-500 flex-shrink-0 mt-1" />
                 <div>
-                    <h2 className="text-xl font-bold">Chế độ Quản lý Hardcode</h2>
+                    <h2 className="text-xl font-bold">Chế độ Quản lý Cơ sở dữ liệu</h2>
                     <p className="mt-1 text-sm">
-                        Tất cả sản phẩm hiện đang được quản lý trực tiếp trong tệp 
-                        <code className="bg-blue-100 text-blue-900 px-1.5 py-0.5 rounded-md text-xs mx-1 font-mono">src/data/products.ts</code>.
-                    </p>
-                    <p className="mt-2 text-sm">
-                        Để <span className="font-semibold">thêm, sửa, hoặc xóa</span> sản phẩm, bạn cần phải chỉnh sửa tệp đó và lưu lại. 
-                        Trang web sẽ tự động cập nhật sau khi bạn lưu thay đổi.
+                        Dữ liệu sản phẩm hiện đang được tải trực tiếp từ cơ sở dữ liệu MongoDB.
                     </p>
                 </div>
             </div>
@@ -57,12 +54,20 @@ export default function ProductManagementPage() {
 
         <div className="flex justify-between items-center flex-wrap gap-4"> 
             <h1 className="text-3xl font-bold text-gray-800 font-serif">Sản phẩm Hiện có ({products.length})</h1>
+            {/* SỬA LỖI: Chuyển button thành Link */}
+            <Link href="/admin/products/new" className="flex items-center gap-2 bg-deep-rose text-white font-bold py-2 px-4 rounded-xl hover:bg-rose-700 transition-colors shadow-lg shadow-rose-200/80">
+                <PlusCircle size={20} />
+                Thêm Sản phẩm
+            </Link>
         </div>
 
         <div className="bg-white p-4 md:p-6 rounded-2xl shadow-lg border border-gray-100 overflow-x-auto">
             <div className="min-w-[600px]">
                 {products.length === 0 ? (
-                    <p className="text-gray-500 italic p-4 text-center">Không có sản phẩm nào trong `src/data/products.ts`.</p>
+                    <div className="text-center py-12">
+                        <p className="text-gray-500 italic mb-4">Không tìm thấy sản phẩm nào trong cơ sở dữ liệu.</p>
+                        <p className="text-gray-500">Hãy bắt đầu bằng cách thêm sản phẩm đầu tiên của bạn!</p>
+                    </div>
                 ) : (
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-rose-50/50">
@@ -75,10 +80,10 @@ export default function ProductManagementPage() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-100">
                             {products.map((product) => (
-                                <tr key={product._id} className="hover:bg-rose-50/50 transition-colors">
+                                <tr key={product._id as string} className="hover:bg-rose-50/50 transition-colors">
                                     <td className="px-6 py-4">
                                         <img 
-                                            src={product.imageUrls[0] || '/images/placeholder.png'} 
+                                            src={product.images && product.images.length > 0 ? product.images[0].url : '/images/placeholder.png'} 
                                             alt={product.name} 
                                             className="h-12 w-12 object-cover rounded-lg shadow-sm" 
                                         />
@@ -94,7 +99,7 @@ export default function ProductManagementPage() {
                                         <Link 
                                             href={`/admin/products/${product._id}`}
                                             className="text-gray-600 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50 transition flex items-center w-fit"
-                                            title="Xem chi tiết (Read-only)"
+                                            title="Xem chi tiết"
                                         >
                                             <Eye className="w-5 h-5 mr-2" /> Xem Chi tiết
                                         </Link>

@@ -1,42 +1,39 @@
 
+// middleware.ts
+import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Tên của cookie dùng để xác thực
-const AUTH_COOKIE_NAME = 'auth_token';
+export async function middleware(req: NextRequest) {
+  // Lấy token từ request
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-export function middleware(request: NextRequest) {
-  // Lấy cookie xác thực từ request
-  const authToken = request.cookies.get(AUTH_COOKIE_NAME);
-  const { pathname } = request.nextUrl;
+  const { pathname } = req.nextUrl;
 
-  // Nếu người dùng cố gắng truy cập vào bất kỳ trang nào trong khu vực /admin
-  // ngoại trừ trang đăng nhập, mà không có token -> CHẶN
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    if (!authToken) {
-      console.log(`[Middleware] No auth token. Redirecting from ${pathname} to /admin/login.`);
-      // Tạo URL tuyệt đối cho việc chuyển hướng
-      const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('next', pathname); // Thêm tham số để có thể quay lại trang cũ sau khi đăng nhập
-      return NextResponse.redirect(loginUrl);
-    }
+  // Nếu đang cố gắng truy cập vào khu vực admin VÀ chưa có token (chưa đăng nhập)
+  if (pathname.startsWith('/admin') && !token) {
+    // Tạo URL tuyệt đối cho trang login
+    const loginUrl = new URL('/login', req.url);
+    // Thêm một tham số `callbackUrl` để chuyển hướng lại sau khi đăng nhập thành công
+    loginUrl.searchParams.set('callbackUrl', req.url);
+    
+    // Chuyển hướng đến trang login
+    return NextResponse.redirect(loginUrl);
   }
 
-  // Nếu người dùng đã đăng nhập và cố vào trang login, đưa họ vào trang admin chính
-  if (pathname === '/admin/login' && authToken) {
-      console.log(`[Middleware] User already logged in. Redirecting from /admin/login to /admin.`);
-      return NextResponse.redirect(new URL('/admin', request.url));
+  // Nếu đã đăng nhập và đang truy cập trang login, chuyển hướng đến trang admin
+  if (pathname === '/login' && token) {
+    return NextResponse.redirect(new URL('/admin/products', req.url));
   }
 
-
-  // Nếu mọi thứ hợp lệ, cho phép request tiếp tục
+  // Nếu hợp lệ, cho phép request đi tiếp
   return NextResponse.next();
 }
 
-// Cấu hình để middleware chỉ chạy trên các đường dẫn của trang admin
+// Chỉ định các route mà middleware này sẽ được áp dụng
 export const config = {
   matcher: [
-    '/admin/:path*', 
-    '/admin/login'
-],
+    '/admin/:path*', // Tất cả các route con trong /admin
+    '/login',         // Route login
+  ],
 };

@@ -1,81 +1,79 @@
+
 // src/context/AuthContext.tsx
 'use client';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi } from '../utils/api';
-import { User } from '../types';
-import axios from 'axios'; 
 
+// --- SỬA LỖI: ĐỊNH NGHĨA CÁC HÀM QUẢN LÝ COOKIE ---
+// Các hàm này cần thiết để giao tiếp với middleware qua cookie.
+const setCookie = (name: string, value: string, days: number) => {
+  let expires = "";
+  if (days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days*24*60*60*1000));
+    expires = "; expires=" + date.toUTCString();
+  }
+  // Đảm bảo cookie có thể được truy cập từ mọi trang
+  document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+
+const deleteCookie = (name: string) => {
+  // Xóa cookie bằng cách đặt ngày hết hạn trong quá khứ
+  document.cookie = name +'=; Max-Age=-99999999; path=/';  
+}
+
+// Giao diện cho Context
 interface AuthContextType {
-  user: User | null;
+  user: { name: string } | null; // User giả lập chỉ cần tên
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>; // Hàm login giả lập
+  logout: () => void; // Hàm logout
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Thay đổi: User sẽ chỉ lưu thông tin cơ bản sau khi login nếu không có Profile API
-  const [user, setUser] = useState<{ name: string } | null>(null); 
+  const [user, setUser] = useState<{ name: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Loại bỏ fetchProfile - Chỉ kiểm tra token
-  const checkToken = () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+  // Khi component được tải, kiểm tra xem cookie xác thực có tồn tại không
+  useEffect(() => {
+    const token = document.cookie.split('; ').find(row => row.startsWith('auth_token='));
     if (token) {
-      // Nếu có token, coi như đã đăng nhập
-      // Chúng ta đặt một user giả định vì không có API Profile để lấy tên thật
-      setUser({ name: "Admin" }); 
+      // Nếu có token, coi như đã đăng nhập và đặt một user giả
+      setUser({ name: "Admin" });
     }
     setIsLoading(false);
-  };
-
-  useEffect(() => {
-    checkToken();
   }, []);
 
+  // --- SỬA LỖI: VIẾT LẠI HÀM LOGIN GIẢ LẬP ---
+  // Hàm này không gọi API, chỉ tạo cookie và cập nhật trạng thái.
   const login = async (email: string, password: string) => {
-    try {
-      // 1. Gọi API login
-      const { access_token } = await authApi.login({ email, password });
-      
-      // 2. Lưu token
-      localStorage.setItem('accessToken', access_token);
-      
-      // 3. Cập nhật trạng thái người dùng (không cần API Profile)
-      setUser({ name: "Admin" }); 
-      console.log("[AUTH LOG] Đăng nhập thành công, bỏ qua bước Profile API 404.");
-
-    } catch (error: any) { 
-        console.error("[AUTH LOG] Đăng nhập thất bại:", error);
-        
-        if (axios.isAxiosError(error) && error.response) {
-            if (error.response.data && error.response.data.message) {
-                 throw new Error(error.response.data.message);
-            } else if (error.response.status === 401) {
-                 throw new Error("Email hoặc mật khẩu không chính xác.");
-            } else {
-                 throw new Error(`Lỗi server (${error.response.status}).`);
-            }
-        } else {
-             throw new Error("Không thể kết nối đến máy chủ API.");
-        }
-    }
+    return new Promise<void>((resolve) => {
+      console.log("[AUTH LOG] Thực hiện đăng nhập giả lập.");
+      // 1. Tạo cookie mà middleware cần
+      setCookie('auth_token', 'fake-token-for-local-dev', 1);
+      // 2. Cập nhật trạng thái người dùng trong ứng dụng
+      setUser({ name: "Admin" });
+      resolve();
+    });
   };
 
+  // --- SỬA LỖI: VIẾT LẠI HÀM LOGOUT ---
+  // Hàm này xóa cookie và cập nhật trạng thái.
   const logout = () => {
-    console.log("[AUTH LOG] Đăng xuất: Xóa token.");
-    localStorage.removeItem('accessToken');
+    console.log("[AUTH LOG] Đăng xuất: Xóa auth_token cookie.");
+    // 1. Xóa cookie
+    deleteCookie('auth_token');
+    // 2. Cập nhật trạng thái người dùng
     setUser(null);
   };
 
-  // User type đã được thay đổi thành { name: string }
   const authContextValue: AuthContextType = {
-    user: user as any, 
-    isAuthenticated: !!user, 
-    isLoading, 
-    login, 
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
     logout
   };
 
@@ -86,6 +84,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
+// Hook custom để sử dụng context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

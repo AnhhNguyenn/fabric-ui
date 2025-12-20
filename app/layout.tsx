@@ -2,8 +2,9 @@
 // app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-// === SỬA LỖI: ĐƯỜNG DẪN ĐÚNG ĐẾN GLOBALS.CSS ===
-import '../styles/globals.css'; 
+
+// === SỬA LỖI: IMPORT ĐÚNG TỆP TAILWIND CSS ===
+import '../src/index.css'; 
 
 import { CartProvider } from '../src/context/CartContext'; 
 import Footer from '../src/components/Footer';

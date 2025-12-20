@@ -202,7 +202,7 @@ const Navbar = () => {
               <div className="h-full flex flex-col items-center justify-center text-center p-6 text-charcoal/40">
                 <ShoppingCart size={48} className="mb-4 opacity-20" />
                 <p className="text-lg font-serif mb-2">Giỏ hàng trống</p>
-                <p className="text-xs uppercase tracking-widest">Hãy chọn những thước vải đẹp nhất nhé</p>
+                <p className="text-xs uppercase tracking-widest">Hãy chọn những bộ áo đẹp nhất của nhà RiCa nhé</p>
               </div>
             ) : (
               items.map((item) => (
