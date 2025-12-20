@@ -3,7 +3,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Product } from '../types';
-import { X, ShoppingCart, Minus, Plus, Check } from 'lucide-react';
+import { X, ShoppingCart, Minus, Plus, Check, Heart, Share2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import ProductImage from './ProductImage';
 
@@ -13,11 +13,12 @@ interface ProductDetailModalProps {
 }
 
 export default function ProductDetailModal({ product, onClose }: ProductDetailModalProps) {
-    const { addItem } = useCart(); // FIX: Changed addToCart to addItem
+    const { addItem } = useCart();
     const [quantity, setQuantity] = useState(1);
     const [activeImage, setActiveImage] = useState(0);
     const [isAdded, setIsAdded] = useState(false);
 
+    // Đóng modal khi nhấn phím Escape
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
@@ -25,51 +26,57 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
             }
         };
         window.addEventListener('keydown', handleEsc);
-        return () => window.removeEventListener('keydown', handleEsc);
+        document.body.style.overflow = 'hidden'; // Chặn cuộn trang nền
+        return () => {
+            window.removeEventListener('keydown', handleEsc);
+            document.body.style.overflow = 'auto'; // Cho phép cuộn lại
+        };
     }, [onClose]);
 
     const handleAddToCart = () => {
-        addItem(product, quantity); // FIX: Changed addToCart to addItem
+        if (isAdded) return;
+        addItem(product, quantity);
         setIsAdded(true);
         setTimeout(() => {
             setIsAdded(false);
             onClose(); 
-        }, 1500); 
+        }, 1500);
     };
 
     const hasImages = product.imageUrls && product.imageUrls.length > 0;
-    const activeImageUrl = hasImages ? product.imageUrls[activeImage] : undefined;
+    const activeImageUrl = hasImages ? product.imageUrls[activeImage] : '/placeholder-image.png';
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" onClick={onClose}>
             <div 
-                className="fixed inset-0" 
-                onClick={onClose} 
-            ></div>
-            <div className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-xl flex flex-col md:flex-row animate-scale-in overflow-hidden">
+                className="relative bg-white w-full max-w-4xl max-h-[95vh] rounded-2xl shadow-2xl flex flex-col lg:flex-row m-4 animate-scale-in-fast"
+                onClick={(e) => e.stopPropagation()} // Ngăn việc bấm vào modal làm nó đóng lại
+            >
+                {/* Nút đóng modal */}
                 <button 
                     onClick={onClose}
-                    className="absolute top-3 right-3 z-20 w-9 h-9 flex items-center justify-center bg-gray-100 hover:bg-rose-100 rounded-full text-gray-700 hover:text-rose-500 transition-all duration-200 hover:rotate-90"
+                    className="absolute top-3 right-3 z-20 w-10 h-10 flex items-center justify-center bg-gray-100/80 hover:bg-rose-100 rounded-full text-gray-700 hover:text-rose-500 transition-all duration-300 hover:rotate-180 transform"
                 >
-                    <X size={20} />
+                    <X size={24} />
                 </button>
 
-                <div className="w-full md:w-1/2 p-4 space-y-3">
-                    <div className="aspect-square rounded-lg overflow-hidden bg-gray-50">
+                {/* Phần hình ảnh sản phẩm */}
+                <div className="w-full lg:w-1/2 p-4 sm:p-6 space-y-4 flex-shrink-0">
+                    <div className="aspect-square rounded-xl overflow-hidden shadow-inner bg-gray-100">
                         <ProductImage 
                             key={activeImageUrl} 
                             src={activeImageUrl} 
                             alt={product.name} 
-                            className="w-full h-full object-cover animate-fade-in"
+                            className="w-full h-full object-cover transition-opacity duration-300 animate-fade-in"
                         />
                     </div>
                     {hasImages && product.imageUrls.length > 1 && (
-                        <div className="grid grid-cols-5 gap-2">
+                        <div className="grid grid-cols-5 gap-3">
                             {product.imageUrls.map((url, index) => (
                                 <button 
                                     key={index}
                                     onClick={() => setActiveImage(index)}
-                                    className={`aspect-square rounded-md overflow-hidden transition-all duration-200 ${activeImage === index ? 'ring-2 ring-offset-2 ring-rose-500' : 'opacity-70 hover:opacity-100'}`}>
+                                    className={`aspect-square rounded-lg overflow-hidden transition-all duration-200 outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 ${activeImage === index ? 'ring-2 ring-offset-2 ring-rose-500' : 'opacity-60 hover:opacity-100'}`}>
                                      <ProductImage src={url} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover"/>
                                 </button>
                             ))}
@@ -77,46 +84,56 @@ export default function ProductDetailModal({ product, onClose }: ProductDetailMo
                     )}
                 </div>
 
-                <div className="w-full md:w-1/2 p-6 flex flex-col">
-                    <h2 className="text-3xl font-serif text-gray-800 tracking-tight">{product.name}</h2>
-                    <p className="text-gray-500 mt-2 text-sm leading-relaxed flex-grow overflow-y-auto">{product.description}</p>
-                    
-                    <div className="my-4">
-                        <span className="text-3xl font-light text-green-700">{product.price.toLocaleString('vi-VN')}</span>
-                        <span className="text-lg text-gray-500"> đ/m</span>
-                    </div>
+                {/* Phần thông tin sản phẩm */}
+                <div className="w-full lg:w-1/2 p-6 flex flex-col overflow-y-auto">
+                    <div className="flex-grow">
+                        <h2 className="text-3xl lg:text-4xl font-serif text-gray-900 tracking-tight mb-2">{product.name}</h2>
+                        <p className="text-gray-500 text-sm leading-relaxed mb-4">{product.description}</p>
+                        
+                        <div className="my-5">
+                            <span className="text-4xl font-light text-green-800">{product.price.toLocaleString('vi-VN')}đ</span>
+                            <span className="text-lg text-gray-500"> / mét</span>
+                        </div>
 
-                    <div className="border-t border-gray-200 pt-4 space-y-3">
-                         <div className="flex items-center gap-4">
-                            <h3 className="font-medium text-gray-600 w-20">Số lượng:</h3>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setQuantity(q => Math.max(0.5, q - 0.5))} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
-                                    <Minus className="w-4 h-4 text-gray-600" />
-                                </button>
-                                <span className="text-lg font-bold w-12 text-center">{quantity}</span>
-                                <button onClick={() => setQuantity(q => q + 0.5)} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition">
-                                    <Plus className="w-4 h-4 text-gray-600" />
-                                </button>
+                        <div className="border-t border-gray-200 pt-5 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-medium text-gray-700">Số lượng</h3>
+                                <div className="flex items-center gap-2">
+                                    <button onClick={() => setQuantity(q => Math.max(0.5, q - 0.5))} className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 transition active:scale-90">
+                                        <Minus className="w-4 h-4 text-gray-700" />
+                                    </button>
+                                    <span className="text-lg font-bold w-16 text-center tabular-nums">{quantity}m</span>
+                                    <button onClick={() => setQuantity(q => q + 0.5)} className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 transition active:scale-90">
+                                        <Plus className="w-4 h-4 text-gray-700" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-medium text-gray-700">Trong kho</h3>
+                                <span className={`text-sm font-bold px-2 py-1 rounded ${product.stock && product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                    {product.stock ? `${product.stock} mét` : 'Hết hàng'}
+                                </span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <h3 className="font-medium text-gray-600 w-20">Trong kho:</h3>
-                            <span className="text-sm font-semibold text-gray-800">{product.stock ? `${product.stock} mét` : 'Hết hàng'}</span>
-                        </div>
                     </div>
 
-                    <div className="mt-auto pt-5">
-                         <button 
+                    {/* Phần chân modal: nút bấm */}
+                    <div className="mt-auto pt-6 space-y-3">
+                        <button 
                             onClick={handleAddToCart}
                             disabled={isAdded || !product.stock || product.stock < 1}
-                            className="w-full text-base font-semibold py-3 rounded-lg transition-all duration-300 flex items-center justify-center text-white disabled:opacity-70 bg-rose-500 hover:bg-rose-600 disabled:bg-gray-400"
+                            className={`w-full text-lg font-bold py-4 rounded-xl transition-all duration-300 flex items-center justify-center text-white transform active:scale-95 ${isAdded ? 'bg-green-500' : 'bg-rose-500 hover:bg-rose-600'} disabled:bg-gray-400 disabled:cursor-not-allowed`}
                         >
                             {isAdded ? (
-                                <><Check className="w-5 h-5 mr-2" /> Đã thêm!</>
+                                <><Check className="w-6 h-6 mr-2" /> ĐÃ THÊM VÀO GIỎ</>
                             ) : (
-                                <><ShoppingCart className="w-5 h-5 mr-3" /> Thêm vào giỏ</>
+                                <><ShoppingCart className="w-6 h-6 mr-3" /> THÊM VÀO GIỎ HÀNG</>
                             )}
                         </button>
+                         <div className="flex items-center justify-center gap-4 text-sm">
+                            <button className="flex items-center gap-2 text-gray-600 hover:text-rose-500 transition-colors"><Heart size={16}/> Thêm vào yêu thích</button>
+                            <button className="flex items-center gap-2 text-gray-600 hover:text-rose-500 transition-colors"><Share2 size={16}/> Chia sẻ</button>
+                        </div>
                     </div>
                 </div>
             </div>

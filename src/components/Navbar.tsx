@@ -22,27 +22,43 @@ const Navbar = () => {
   } = useCart();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+        const isScrolled = window.scrollY > 20;
+        setScrolled(isScrolled);
+        // Cập nhật biến CSS cho chiều cao navbar
+        const navbarHeight = document.querySelector('nav')?.offsetHeight || 0;
+        document.documentElement.style.setProperty('--navbar-height', `${navbarHeight}px`);
+    };
+    
+    // Gọi một lần lúc đầu để set giá trị ban đầu
+    handleScroll();
+    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // === HÀM CUỘN TỚI KHU VỰC ===
   const scrollToSection = (id: string) => {
-    // Đóng menu mobile trước
     setIsMobileMenuOpen(false);
-
-    // Nếu đang ở trang chủ thì cuộn, ngược lại thì điều hướng về trang chủ rồi cuộn
     if (window.location.pathname === '/') {
-        // Timeout nhỏ để đảm bảo menu mobile đã đóng và không gây giật cục
         setTimeout(() => {
             const element = document.getElementById(id);
             if (element) {
-                element.scrollIntoView({ behavior: 'smooth' });
+                // Lấy chiều cao navbar từ biến CSS
+                const navbarHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--navbar-height')) || 0;
+                const offset = navbarHeight + 20; // Thêm khoảng đệm
+                const bodyRect = document.body.getBoundingClientRect().top;
+                const elementRect = element.getBoundingClientRect().top;
+                const elementPosition = elementRect - bodyRect;
+                const offsetPosition = elementPosition - offset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
             }
         }, 50);
     } else {
-        // Nếu ở trang khác, điều hướng về trang chủ với hash
         window.location.href = `/#${id}`;
     }
   };
@@ -54,10 +70,10 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className={`fixed w-full z-40 transition-all duration-500 border-b ${scrolled ? 'bg-lavender-blush/90 backdrop-blur-xl border-rose-200 py-3 shadow-sm' : 'bg-transparent border-transparent py-6'}`}>
+      {/* Sửa z-index thành 50 và thêm class 'navbar' để lấy chiều cao */}
+      <nav className={`navbar fixed w-full z-50 transition-all duration-500 border-b ${scrolled ? 'bg-lavender-blush/90 backdrop-blur-xl border-rose-200 py-3 shadow-sm' : 'bg-transparent border-transparent py-6'}`}>
         <div className="container mx-auto px-6 grid grid-cols-3 items-center">
           
-          {/* === SỬA LỖI LẦN 2: Dùng button cuộn trang cho TẤT CẢ các mục === */}
           <div className="hidden md:flex items-center gap-10">
             <button onClick={() => scrollToSection('products')} className="text-deep-rose hover:text-rose-accent font-medium text-xs uppercase tracking-[0.15em] transition-colors relative group">
               Sản phẩm
@@ -89,7 +105,6 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Right Icons (Giữ nguyên) */}
           <div className="flex justify-end items-center gap-3 md:gap-5">
             <button 
                 onClick={() => setIsSearchOpen(true)}
@@ -113,7 +128,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Menu Drawer (Đã sửa lỗi) */}
+      {/* Mobile Menu Drawer */}
       <div 
          className={`fixed inset-0 z-[200] bg-lavender-blush transition-transform duration-500 ease-in-out md:hidden flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
@@ -147,7 +162,7 @@ const Navbar = () => {
           </div>
       </div>
 
-      {/* Các Overlay khác giữ nguyên */}
+      {/* Search Overlay */}
        <div className={`fixed inset-0 z-[160] bg-lavender-blush/95 backdrop-blur-xl transition-all duration-500 flex flex-col items-center pt-32 ${isSearchOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
          <button 
             onClick={() => setIsSearchOpen(false)}
@@ -178,6 +193,8 @@ const Navbar = () => {
             </div>
          </div>
       </div>
+      
+      {/* Cart Overlay */}
       <div 
         className={`fixed inset-0 z-[150] bg-charcoal/40 backdrop-blur-md transition-opacity duration-500 ${isCartOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={closeCart}
