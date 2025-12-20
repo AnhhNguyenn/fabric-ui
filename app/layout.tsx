@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider> // Bao bọc toàn bộ ứng dụng bằng AuthProvider
+        <AuthProvider>
           <CartProvider>
             {children}
             <Footer />
